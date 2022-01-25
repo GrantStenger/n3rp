@@ -67,14 +67,13 @@ abstract contract LeaseNFT is ERC721 {
         // Assign our declared variables
         lenderAddress = _lenderAddress;
         borrowerAddress = _borrowerAddress;
-        tokenId = _tokenId
+        tokenId = _tokenId;
         expiry = _expiry;
         costToLease = _costToLease;
         collateral = _collateral;
         interestRate = _interestRate;
         interestPerBlock = interestRate / 365 days;
         
-
         // I need to be careful calculating this
         // timeToDepletion = log(collateral/payment, interestPerBlock);
 
@@ -169,5 +168,5 @@ Questions:
         d. costToLease vs initialPayment?
     10. How can this be exploited?
     11. Should the LeaseNFT contract be abstract or should I implement each of the ERC721 functions?
-    11. How could we accept other forms of collateral other than ETH?
+    12. How could we accept other forms of collateral other than ETH?
 */
