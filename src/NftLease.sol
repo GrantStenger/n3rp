@@ -16,6 +16,9 @@ abstract contract LeaseNFT is ERC721 {
     // The address of the tempory borrower
     address public immutable borrowerAddress;
 
+    // The ID of the NFT to lend
+    uint256 public tokenId;
+
     // The expiration time of the lease
     uint256 public immutable expiry;
 
@@ -35,6 +38,7 @@ abstract contract LeaseNFT is ERC721 {
     constructor(
         address payable _lenderAddress,
         address payable _borrowerAddress,
+        uint256 _tokenId,
         string memory _name,
         string memory _symbol,
         uint256 _expiry,
@@ -48,6 +52,7 @@ abstract contract LeaseNFT is ERC721 {
         
         lenderAddress = _lenderAddress;
         borrowerAddress = _borrowerAddress;
+        tokenId = _tokenId
         expiry = _expiry;
         costToLease = _costToLease;
         collateral = _collateral;
@@ -55,7 +60,7 @@ abstract contract LeaseNFT is ERC721 {
 
         _sendInitialPayment();
         _storeCollateral();
-        _transferOwnership();
+        _transfer();
     }
 
     // Send the initial payment from the borrower to the lender
@@ -71,9 +76,20 @@ abstract contract LeaseNFT is ERC721 {
 
     }
 
-    // Once the collateral is in the contract, transfer the NFT ownership
-    function _transferOwnership() private {
+    function _transfer(address _from, address _to, uint256 _tokenId) private {
+        emit Transfer(_from, _to, _tokenId);
+    }
 
+    // Once the collateral is in the contract, the lender approves the tranfer
+    function approveTransfer(address _to, uint256 _tokenId) external payable {
+        // Note: this function must be called by the lender
+        transferFrom(msg.sender, _to, _tokenId);
+    }
+
+    // Once the lender has approved the transfer, transfer the NFT to the borrower
+    function transferOwnership(address _from, uint256 tokenId) external payable {
+        // Note: this function is called by the borrower
+        transferFrom(_from, msg.sender, _tokenId);
     }
 
 }
