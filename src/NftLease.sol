@@ -2,12 +2,13 @@
 pragma solidity 0.8.10;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
-import {PRBMathSD59x18} from "../lib/prb-math/contracts/PRBMathSD59x18.sol";
+import {SafeMath} from "openzeppelin/SafeMath.sol";
+// import {PRBMathSD59x18} from "../lib/prb-math/contracts/PRBMathSD59x18.sol";
 
-contract LeaseNFT is ERC721 {
+abstract contract LeaseNFT is ERC721 {
 
-    // Use PRBMathSD59x18 
-    using PRBMathSD59x18 for int256;
+    // Use PRBMathSD59x18 or SafeMath
+    using SafeMath for uint256;
 
     // The address of the original owner
     address payable public immutable lenderAddress;
@@ -42,7 +43,7 @@ contract LeaseNFT is ERC721 {
         uint256 _interestRate
     ) ERC721(_name, _symbol) {
         // TODO: Require that the _lenderAddress owns the _leasedNFT
-        require(expiry > block.timestamp, "Expiry is before current time");
+        require(_expiry > block.timestamp, "Expiry is before current time");
         // TODO: Require that the _borrowerAddress has more than _costToLease + _collateral
         
         lenderAddress = _lenderAddress;
@@ -94,5 +95,6 @@ Questions:
         c. expiry vs expirationTime?
         d. costToLease vs initialPayment?
     10. How can this be exploited?
+    11. Should the LeaseNFT contract be abstract or should I implement each of the ERC721 functions?
     11. How could we accept other forms of collateral other than ETH?
 */
