@@ -5,44 +5,79 @@ import {ERC721} from "solmate/tokens/ERC721.sol";
 import {SafeMath} from "openzeppelin/SafeMath.sol";
 // import {PRBMathSD59x18} from "../lib/prb-math/contracts/PRBMathSD59x18.sol";
 
-abstract contract LeaseNFT is ERC721 {
+/*
+Summary:
 
-    // Use PRBMathSD59x18 or SafeMath
+1. The lender has an NFT that the borrower wants to borrow. 
+2. The lender will only give the borrower the NFT if the borrower pays the lender and puts up collateral.
+3. In v1, each Lease contract represents one lease. 
+4. In the constructor, the borrower and lender are specified as well as the NFT to be borrowed, the time of expiry, 
+   the payment (rent), the collateral, and the time the 
+
+
+
+
+
+
+5. Make explicit the default conditions.
+6. Termination clause. The borrower can return the NFT at any time before the expiration. 
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+contract N3RP {
+
+    // Use SafeMath or PRBMathSD59x18
     using SafeMath for uint256;
 
     // The address of the original owner
     address payable public immutable lenderAddress;
 
     // The address of the tempory borrower
-    address public immutable borrowerAddress;
+    address payable public immutable borrowerAddress;
 
-    // The ID of the NFT to lend
-    uint256 public tokenId;
+    // The NFT to lend (object identification)
+    ERC721 private nft;
 
     // The expiration time of the lease
-    uint256 public immutable expiry;
+    uint256 public immutable expiry; // default time
 
     // The amount of ETH the borrower must pay the lender in order to lease the specified NFT for the specified period
-    uint256 public immutable costToLease;
+    uint256 public immutable costToLease; // rent
 
     // The amount of additional ETH the lender requires as collateral
-    uint256 public immutable collateral;
+    uint256 public immutable collateral; // security deposit
 
-    // The interest rate the borrower must pay if the expiration is exceeded
-    uint256 public immutable interestRate;
+    // The borrower pays the lender linearly after expiry until the nft is fully purchased for all of the collateral
+    uint256 public immutable daysTillFullyPurchased;
 
     // The time when the contract officially begins
-    uint256 public immutable contractInitializationTime;
+    uint256 public immutable contractInitializationTime; // startingTime, initializationTime
 
     // The amount of collateral left in the contract
     uint256 public collateralLeft;
 
+
+    // The interest rate the borrower must pay if the expiration is exceeded
+    // uint256 public immutable interestRate;
+
     // Mapping containing approvals for calling token transfer
     // mapping(uint => address) transferApprovals;
+
 
     // Errors
     error InsufficientPayment();
     error FailedToSendEther();
+
 
     constructor(
         address payable _lenderAddress,
@@ -149,24 +184,3 @@ abstract contract LeaseNFT is ERC721 {
         }
     }
 }
-
-
-/*
-Questions:
-    1. Are all my functions/variables properly scoped?
-    2. Do I use memory/storage in the correct places?
-    3. Which functions need to be payable?
-    4. Am I using immutable correctly?
-    5. Do I use SafeMath/PRBMathSD59x18 in the correct places?
-    6. What license should I use for this? MIT? GPL-3.0? Unliscence?
-    7. Are there other error conditions I should consider?
-    8. Who calls this contract? How do we make sure both parties consent to this agreement?
-    9. What are clearest variable names?
-        a. originalOwner vs lenderAddress?
-        b. temporaryOwner vs borrowerAddress?
-        c. expiry vs expirationTime?
-        d. costToLease vs initialPayment?
-    10. How can this be exploited?
-    11. Should the LeaseNFT contract be abstract or should I implement each of the ERC721 functions?
-    12. How could we accept other forms of collateral other than ETH?
-*/

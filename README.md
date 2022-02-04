@@ -86,4 +86,4 @@ npm run lint
 
 ## Memes
 
-!["n3rp"]("img/nerp.jpg")
+!["n3rp"](img/nerp.jpg)
