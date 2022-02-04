@@ -2,7 +2,7 @@
 
 
 ## Introduction
-The NFT Rental Protocol (N3RP) allows owners to rent out their NFTs for a specified time period in exchange for payment. Do your NFTs give you access to exclusive events you can't attend? NLP compensates your for your fomo with ETH payments while temporary borrowers get the chance of flexing flashy blue chips. 
+The NFT Rental Protocol (N3RP) allows owners to rent out their NFTs for a specified time period in exchange for payment. Do your NFTs give you access to exclusive events you can't attend? N3RP compensates your for your fomo with ETH payments while temporary borrowers get the chance of flexing flashy blue chips. 
 
 My intention is to implement the functionality for [standard leases](https://en.wikipedia.org/wiki/Lease) applied in the context of digital assets (specifically [ERC721 tokens](https://docs.openzeppelin.com/contracts/4.x/api/token/erc721)).
 
@@ -82,3 +82,8 @@ npm run lint
 3. Add renew lease functionality
 4. Encode payment methods other than lump sum (periodic payments being an obvious alternative)
 5. Add auction structure where potential borrowers place bids for NFTs they'd like to borrow over specified time periods
+
+
+## Memes
+
+!["n3rp"]("img/nerp.jpg")
