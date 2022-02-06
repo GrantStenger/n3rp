@@ -1,4 +1,5 @@
 # N3RP: NFT Rental Protocol
+**Not Production Ready Yet**
 
 
 ## Introduction
@@ -17,14 +18,37 @@ How can these strangers coordinate this transaction safely? Alice can either tra
 
 
 ## Mechanism
-1. A lender and borrower must both consent into the following contract
-2. The borrower wants to be able to lease a specific NFT for a predefined period of time
-3. Require that the lender owns the NFT
-4. In exchange for leasing out their NFT, the lender receives an initial lump sum payment
-5. The lender additionally requires collateral to be put up to prevent the borrower from rugging
-6. Require that the borrower has the initial sum and the collateral before proceeding
-7. If the borrower steals, sells, or loses the NFT or is otherwise unable to return it, the collateral is paid to the lender daily in high interest payments until the NFT is return or the collateral is depleted 
-8. If the borrower returns the NFT before their agreed upon expiration, their collateral is returned and the contract is terminated
+
+1. The lender has an NFT they're willing to lend, and a borrower has ETH they're willing to pay and put up as collateral in order to borrow the NFT for a specified period of time. 
+
+2. The lender and borrower meet in a marketplace and agree upon the following terms:
+
+    a) The NFT: the NFT which must be owned by the lender that the borrower wants to rent
+
+    b) The base payment: the base payment in ETH that the borrower agrees to pay the lender, which is all that is paid if the borrower returns the NFT before the rental period ends
+
+    c) The rental due date: the time the borrower must return the NFT by before additional late fees accumulate
+
+    d) The collateral: the ETH the borrower puts up which gets paid out linearly to the lender during the collateral payout period beginning at the end of the rental period
+
+    e) The collateral payout period: the amount of time over which the collateral gets paid from the borrower to the lender if the NFT is not yet returned to the contract.
+
+3. One of the parties creates the contract with the informally agreed upon terms; if they are the lender, they send their NFT to the contract, and if they are the borrower, they send their base payment plus collateral to the contract. This contract will also include a nullification time by which the contract becomes nullified if the other party does not send their designated assets by this time. 
+
+4. With this contract created and one party having sent their designated assets, there are two cases to consider: the second party either a) fails to send their assets before the nullification period, or b) successfully sends their assets before the nullification period.
+
+    a) In the first case, the first party has the ability to withdraw their assets at any point if the second party has not deposited their full amount. If the nullification date comes and the second party has not deposited their required assets, the first party's assets are returned to them.
+    
+    b) In the second case where both parties deposit their assets before the nullification date, the rental period begins. At the moment the final asset enters the contract, the NFT is sent to the borrower and the rental payment is sent to the lender. 
+
+5. How might this contract be concluded? There are three main cases.
+
+    a) In the typical case, the borrower returns the NFT to the contract before the rental due date. In this scenario, the NFT is returned to the lender, the collateral is returned to the borrower, and the contract is terminated. 
+
+    b) In the case where the NFT is returned during the collateral payout period, the lender is sent both their NFT and also the proportion of the collateral they are owed, the borrower is sent the collateral remaining, and the contract is terminated. 
+    
+    c) In the case where the borrower never returns the NFT, when the collateral payout period ends, the lender can then withdraw the full collateral from the contract, the borrower keeps the NFT having paid a premium of the base payment plus collateral, and the contract is terminated. 
+
 
 ## Development 
 
@@ -47,6 +71,13 @@ npm install
 npm run lint 
 ```
 
+## Credits
+
+Used the following for style and structure guidance:
+1. https://github.com/FrankieIsLost/CRISP
+2. https://github.com/Anish-Agnihotri/pawnft
+3. https://github.com/FrankieIsLost/RICKS
+
 
 ## Questions
 1. Is collateral required? If the NFT needs to be transfered to the borrower's EOA then collateral is likely required. 
@@ -60,7 +91,7 @@ npm run lint
         payable(address sending to).call({value: amt})
 4. Am I using immutable correctly?
 5. Do I use SafeMath/PRBMathSD59x18 in the correct places?
-6. What license should I use for this? MIT? GPL-3.0? Unliscence?
+6. What license should I use for this? GPL-3.0? MIT? Unliscence?
 7. Are there other error conditions I should consider?
 8. Who calls this contract? How do we make sure both parties consent to this agreement?
 9. What are clearest variable names?
@@ -75,6 +106,7 @@ npm run lint
     containing the relevant information for each lender-borrower-nft object and make a map of all live leases.
     The drawback of this is that everyone relies on the same contract, so if anything breaks risk/security is 
     spread across all users. The benefits is that it'll be cheaper for uses because they won't have to redeploy.
+
 
 ## To Do's:
 1. Write tests

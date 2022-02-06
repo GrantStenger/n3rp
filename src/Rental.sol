@@ -1,64 +1,45 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.10;
 
+// ============ Imports ============
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import {SafeMath} from "openzeppelin/SafeMath.sol";
 // import {PRBMathSD59x18} from "../lib/prb-math/contracts/PRBMathSD59x18.sol";
 
-/*
-Summary:
 
-1. The lender has an NFT that the borrower wants to borrow. 
-2. The lender will only give the borrower the NFT if the borrower pays the lender and puts up collateral.
-3. In v1, each Lease contract represents one lease. 
-4. In the constructor, the borrower and lender are specified as well as the NFT to be borrowed, the time of expiry, 
-   the payment (rent), the collateral, and the time the 
-
-
-
-
-
-
-5. Make explicit the default conditions.
-6. Termination clause. The borrower can return the NFT at any time before the expiration. 
-
-
-
-*/
-
-
-
-
-
-
-
-
-
-contract N3RP {
+contract Rental {
 
     // Use SafeMath or PRBMathSD59x18
     using SafeMath for uint256;
 
+    /// ------------------------
+    /// ----- Parameters -------
+    /// ------------------------
+
     // The address of the original owner
-    address payable public immutable lenderAddress;
+    address payable public immutable lenderAddress; // public vs private? payable?
 
     // The address of the tempory borrower
-    address payable public immutable borrowerAddress;
+    address payable public immutable borrowerAddress; // public vs private? payable?
 
-    // The NFT to lend (object identification)
-    ERC721 private nft;
+    // The NFT to lend
+    ERC721 public immutable nft; // public or private?
 
-    // The expiration time of the lease
+    // The expiration time of the reantal
     uint256 public immutable expiry; // default time
 
-    // The amount of ETH the borrower must pay the lender in order to lease the specified NFT for the specified period
-    uint256 public immutable costToLease; // rent
+    // The amount of ETH the borrower must pay the lender in order to rent the specified NFT for the specified period
+    uint256 public immutable costToRent; // rent
 
     // The amount of additional ETH the lender requires as collateral
     uint256 public immutable collateral; // security deposit
 
+    /// ----------------------
+    /// -------- State -------
+    /// ----------------------
+
     // The borrower pays the lender linearly after expiry until the nft is fully purchased for all of the collateral
-    uint256 public immutable daysTillFullyPurchased;
+    uint256 public daysTillFullyPurchased;
 
     // The time when the contract officially begins
     uint256 public immutable contractInitializationTime; // startingTime, initializationTime
@@ -66,18 +47,29 @@ contract N3RP {
     // The amount of collateral left in the contract
     uint256 public collateralLeft;
 
-
-    // The interest rate the borrower must pay if the expiration is exceeded
-    // uint256 public immutable interestRate;
-
     // Mapping containing approvals for calling token transfer
     // mapping(uint => address) transferApprovals;
 
+    /// ---------------------------
+    /// -------- Events -----------
+    /// ---------------------------
 
-    // Errors
+    event RentalStarted();
+
+    event NftReturned();
+
+    event PayoutPeriodBegins();
+
+    /// ---------------------------
+    /// --------- Errors ----------
+    /// ---------------------------
+
     error InsufficientPayment();
     error FailedToSendEther();
 
+    /// ---------------------------
+    /// ------- Functions ---------
+    /// ---------------------------
 
     constructor(
         address payable _lenderAddress,
@@ -86,15 +78,15 @@ contract N3RP {
         string memory _name,
         string memory _symbol,
         uint256 _expiry,
-        uint256 _costToLease,
+        uint256 _costToRent,
         uint256 _collateral,
         uint256 _interestRate
     ) ERC721(_name, _symbol) {
         // Require that the _lenderAddress owns the specified NFT
         require(ownerOf(_tokenId) == _lenderAddress);
 
-        // Require that the _borrowerAddress has more than _costToLease + _collateral
-        require(_borrowerAddress.balance >= _costToLease + _collateral);
+        // Require that the _borrowerAddress has more than _costToRent + _collateral
+        require(_borrowerAddress.balance >= _costToRent + _collateral);
 
         // Require that the expiry is in the future
         require(_expiry > block.timestamp, "Expiry is before current time");
@@ -104,7 +96,7 @@ contract N3RP {
         borrowerAddress = _borrowerAddress;
         tokenId = _tokenId;
         expiry = _expiry;
-        costToLease = _costToLease;
+        costToRent = _costToRent;
         collateral = _collateral;
         interestRate = _interestRate;
         interestPerBlock = interestRate / 365 days;
@@ -184,3 +176,18 @@ contract N3RP {
         }
     }
 }
+
+
+
+/*
+Summary:
+
+1. The lender has an NFT that the borrower wants to borrow. 
+2. The lender will only give the borrower the NFT if the borrower pays the lender and puts up collateral.
+3. In v1, each Rental contract represents one nft rental. 
+4. In the constructor, the borrower and lender are specified as well as the NFT to be borrowed, the time of expiry, 
+   the payment (rent), the collateral, and the time the 
+5. Make explicit the default conditions.
+6. Termination clause. The borrower can return the NFT at any time before the expiration. 
+
+*/
