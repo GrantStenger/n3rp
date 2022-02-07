@@ -127,6 +127,10 @@ Used the following for style and structure guidance:
 17. Do any get (view) functions need to be added?
 18. None of our functions have any returns. Should they have any?
 19. Am I handling ETH-Wei conversions correctly? Could a contract be created with a decimal ETH payment or collateral?
+20. Do I need to do anything specific to terminate the contract?
+21. Confirm that the calculations for how much the lender can withdraw during and after the payout period is correct.
+22. What are standard solidity conventions about enters between functions, ifs, requires, etc?
+23. Make sure this code accords to standard solidity style guidelines.
 
 
 ## To Do's:

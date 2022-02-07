@@ -2,18 +2,14 @@
 pragma solidity 0.8.10;
 
 // ============ Imports ============
-import { ERC721 } from "https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol";
-// import { ERC721 } from "solmate/tokens/ERC721.sol";
-
-import { SafeMath } from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/SafeMath.sol";
-// import { SafeMath } from "openzeppelin/SafeMath.sol";
+import { ERC721 } from "solmate/tokens/ERC721.sol";
+import { SafeMath } from "openzeppelin/SafeMath.sol";
 
 
 contract Rental {
 
     // Use OpenZeppelin's SafeMath library
     using SafeMath for uint256;
-
 
     /// ------------------------
     /// ----- Parameters -------
@@ -46,7 +42,6 @@ contract Rental {
     // The contract deployoor specifies a period by which the assets must be deposited else the contract is voided
     uint256 public immutable nullificationTime;
 
-
     /// ----------------------
     /// -------- State -------
     /// ----------------------
@@ -63,7 +58,6 @@ contract Rental {
     // Store if the borrower's required ETH has been deposited
     bool private ethIsDeposited; // the contract should have the capacity to look up how much eth has been deposited into it
 
-
     /// ---------------------------
     /// -------- Events -----------
     /// ---------------------------
@@ -73,7 +67,6 @@ contract Rental {
     event NftReturned();
     event PayoutPeriodBegins();
     event PayoutPeriodEnds();
-
 
     /// ---------------------------
     /// --------- Errors ----------
@@ -85,7 +78,6 @@ contract Rental {
     error IncorrectState();
     error NotEligibleForRewards();
     error InvalidToken();
-
 
     /// ---------------------------
     /// ------- Functions ---------
@@ -142,7 +134,7 @@ contract Rental {
     // After the contract is constructed with the parameters informally agreed upon off-chain,
     // the lender must deposit the designated NFT if they want to receive the rental payment.
     // The lender 
-    function depositNft() external {
+    function depositNft() external payable {
 
         // Require that the sender is the lender who owns the NFT that the borrower expects
         require(!nftIsDeposited, "The NFT has already been deposited");
@@ -193,13 +185,11 @@ contract Rental {
 
         // If the lender has not deposited their nft, send the ETH to the contract
         if (!nftIsDeposited) {
-            // TODO: Transfer msg.value to contract (this should actually be done as the function is called)
-
+            // The msg.value is automatically sent to the contract
             ethIsDeposited = true;        
         } else { 
             // If the lender has deposited their nft, send the ETH directly to the lender
-            // TODO: Transfer msg.value to lender
-
+            payable(lenderAddress).transfer(msg.value);
             // Transfer the NFT from the contract to the borrower
             nftCollection.safeTransferFrom(address(this), borrowerAddress, nftId);
             ethIsDeposited = true;
@@ -218,26 +208,41 @@ contract Rental {
 
         // Send the nft back to the lender
         nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
+
     }
 
     function withdrawEth() external payable {
+
+        // Require that only the borrower can call this function
         require(msg.sender == borrowerAddress, "The borrower must be the msg sender");
+
+        // Require that the ETH has already been deposited and the NFT has not been
         require(!nftIsDeposited && ethIsDeposited, "Either the NFT is already deposited or the ETH is not yet deposited");
-        // TODO: have the contract send the eth back to the borrower
+
+        // Have the contract send the eth back to the borrower
+        payable(borrowerAddress).transfer(rentalPayment.add(collateral));
 
     }
 
     // This function can be called by anyone at anytime (if the nullification period elapses,
     // this will likely be called by whichever party has their assets deposited in the contract.)
     function nullifyContract() public payable {
+
         // Check if the rental has not started yet and the nullification period has passes
         if (rentalStartTime == 0 && block.timestamp >= nullificationTime) {
+
+            // Check if ETH has already been deposited by the borrower
             if (ethIsDeposited) {
-                // TODO: have the contract return the ETH to the borrower
+                // Have the contract return the ETH to the borrower
+                payable(borrowerAddress).transfer(rentalPayment+collateral);
             }
+
+            // Check if the NFT has already been deposited by the lender
             if (nftIsDeposited) {
-                // TODO: have the contract return the NFT to the lender
+                // Have the contract return the NFT to the lender
+                nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
             }
+
             emit ContractNullified();
         }
     }
@@ -249,24 +254,45 @@ contract Rental {
     }
 
     // This function will be called by the borrower when they have returned the NFT to the contract
-    function returnNft() external {
-        // TODO: Check if the borrower has returned the NFT to the contract
-        bool nftIsReturned; // temporary variable to explain the following
-        if (nftIsReturned == true && block.timestamp <= dueDate) {
-            // TODO: Implement the case where the NFT is returned on time
-            // TODO: Return NFT to the lender
-            // TODO: Return collateral to the borrower
-            // TODO: Terminate contract (idk what this means rn)
-        } else if (nftIsReturned == true && block.timestamp > dueDate && block.timestamp < dueDate.add(collateralPayoutPeriod)) {
-            // TODO: Implement the case where the NFT is returned during the collateral payout period
-            // TODO: Return NFT to the lender
-            // TODO: Send the lender the proportion of the collateral they are owed
-            // TODO: Send the borrower what's left of the collateral
-            // TODO: Terminate the contract
-        } else if (nftIsReturned == true && block.timestamp >= dueDate.add(collateralPayoutPeriod)) {
-            // TODO: Implement the case where the NFT is not returned by the end of the collateral payout period
-            // TODO: Allows the lender to withdraw the full amount of collateral from the contract
-            // TODO: Terminate the contract
+    function returnNft() external payable {
+
+        // Check if the borrower has returned the NFT to the contract
+        require(nftCollection.ownerOf(nftId) == address(this));
+
+        // Check if the NFT has been returned on time
+        if (block.timestamp <= dueDate) {
+            // Return the NFT to the lender
+            nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
+            // Return the collateral to the borrower
+            payable(borrowerAddress).transfer(collateral);
         }
+        // Check if the NFT has been returned during the collateral payout period
+        else if (block.timestamp > dueDate && block.timestamp < dueDate.add(collateralPayoutPeriod)) {
+            // Return the NFT to the lender
+            nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
+            // Send the lender the collateral they are owed
+            withdrawCollateral();
+            // Send the borrower the collateral that is left
+            payable(borrowerAddress).transfer(address(this).balance);
+        }
+    }
+
+    // This function will likely be called by the lender but could be called by anyone.
+    // It transfers to the lender the amount of collateral that is owed to them
+    function withdrawCollateral() public payable {
+        // This can only be called after the rental due date has passed and the payout period has begun
+        require(block.timestamp > dueDate);
+
+        // Calculate how much the lender should be able to withdraw
+        uint256 withdrawableCollateral;
+        uint256 timeLeftUntilFullyPaid = rentalStartTime + collateralPayoutPeriod - block.timestamp;
+        if (timeLeftUntilFullyPaid > 0) {
+            withdrawableCollateral = address(this).balance.sub(collateral.mul(timeLeftUntilFullyPaid.div(collateralPayoutPeriod)));
+        } else {
+            withdrawableCollateral = address(this).balance;
+        }
+        
+        // Send the lender the collateral they're able to withdraw
+        payable(lenderAddress).transfer(withdrawableCollateral);
     }
 }
