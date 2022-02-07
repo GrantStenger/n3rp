@@ -2,34 +2,40 @@
 pragma solidity 0.8.10;
 
 // ============ Imports ============
-import { ERC721 } from "solmate/tokens/ERC721.sol";
-import { SafeMath } from "openzeppelin/SafeMath.sol";
-// import  {PRBMathSD59x18 } from "../lib/prb-math/contracts/PRBMathSD59x18.sol";
+import { ERC721 } from "https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol";
+// import { ERC721 } from "solmate/tokens/ERC721.sol";
+
+import { SafeMath } from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/SafeMath.sol";
+// import { SafeMath } from "openzeppelin/SafeMath.sol";
 
 
 contract Rental {
 
-    // Use SafeMath or PRBMathSD59x18
+    // Use OpenZeppelin's SafeMath library
     using SafeMath for uint256;
+
 
     /// ------------------------
     /// ----- Parameters -------
     /// ------------------------
 
     // The address of the original owner
-    address public immutable lenderAddress; // public, private, internal, or external? payable?
+    address public immutable lenderAddress;
 
     // The address of the tempory borrower
-    address public immutable borrowerAddress; // ppie? payable?
+    address public immutable borrowerAddress;
 
-    // The NFT to lend
-    ERC721 public immutable nft; // ppie?
+    // The collection of the NFT to lend
+    ERC721 public immutable nftCollection;
+
+    // The the id of the NFT within the collection
+    uint256 public immutable nftId;
 
     // The expiration time of the rental
     uint256 public immutable dueDate; // this will be a ethereum block time
 
     // The amount of ETH the borrower must pay the lender in order to rent the NFT if returned on time
-    uint256 public immutable rentalPayment; // ppie?
+    uint256 public immutable rentalPayment;
 
     // The amount of additional ETH the lender requires as collateral
     uint256 public immutable collateral; // security deposit
@@ -49,13 +55,13 @@ contract Rental {
     uint256 public rentalStartTime; // contractInitializationTime, startingTime, initializationTime
 
     // The amount of collateral left in the contract
-    uint256 public collateralLeft;
+    uint256 public collateralLeft; // should collateralLeft and rentalStartTime be public or private?
 
     // Store if the NFT has been deposited
-    bool nftIsDeposited;
+    bool private nftIsDeposited; // really, the contract should have the capacity to look up if it is the nft owner
 
     // Store if the borrower's required ETH has been deposited
-    bool ethIsDeposited;
+    bool private ethIsDeposited; // the contract should have the capacity to look up how much eth has been deposited into it
 
 
     /// ---------------------------
@@ -87,9 +93,10 @@ contract Rental {
 
     // The contract deployor could be anyone but is most likely to be the borrower or lender. 
     constructor(
-        address _lenderAddress, // Should these be payable?
-        address _borrowerAddress, // Should any of these be memory/storage?
+        address payable _lenderAddress, // Should these be payable?
+        address payable _borrowerAddress, // Should any of these be memory/storage?
         address _nftAddress,
+        uint256 _nftId,
         uint256 _dueDate,
         uint256 _rentalPayment,
         uint256 _collateral,
@@ -98,18 +105,28 @@ contract Rental {
     ) { // Do we need any modifiers? Should this return anything?
 
         // Require that the _lenderAddress owns the specified NFT
-        require(ownerOf(_nftAddress) == _lenderAddress);
+        require(
+            ERC721(_nftAddress).ownerOf(_nftId) == _lenderAddress,
+            "The specified NFT is not currently owned by the lender"
+        );
 
         // Require that the _borrowerAddress has more than _rentalPayment + _collateral
-        require(_borrowerAddress.balance >= _rentalPayment.add(_collateral));
+        require(
+            _borrowerAddress.balance >= _rentalPayment.add(_collateral),
+            "The borrower has less ETH than the rental payment plus collateral"
+        );
 
         // Require that the expiry is in the future
-        require(_dueDate > block.timestamp, "Expiry is before current time");
+        require(
+            _dueDate < block.timestamp,
+            "The due date is earlier than right now"
+        );
         
         // Assign our contract parameters
-        lenderAddress = _lenderAddress;
-        borrowerAddress = _borrowerAddress;
-        nft = ERC721(_nftAddress);
+        lenderAddress = payable(_lenderAddress);
+        borrowerAddress = payable(_borrowerAddress);
+        nftCollection = ERC721(_nftAddress);
+        nftId = _nftId;
         dueDate = _dueDate;
         rentalPayment = _rentalPayment;
         collateral = _collateral;
@@ -124,81 +141,101 @@ contract Rental {
 
     // After the contract is constructed with the parameters informally agreed upon off-chain,
     // the lender must deposit the designated NFT if they want to receive the rental payment.
-    function depositNft(address _nftAddress) {
+    // The lender 
+    function depositNft() external {
 
         // Require that the sender is the lender who owns the NFT that the borrower expects
-        require(!nftIsDeposited);
-        require(msg.sender == lenderAddress);
-        require(msg.sender == nft.owner);
-        require(_nftAddress == nft.address);
+        require(!nftIsDeposited, "The NFT has already been deposited");
+        require(msg.sender == lenderAddress, "The msg sender must be the lender");
+        require(msg.sender == nftCollection.ownerOf(nftId), "The msg sender must own the NFT");
+        // require(_nftAddress == address(nftCollection), "The submitted NFT does not match the initially agreed upon NFT");
 
         // If the nullification time has passed, emit this and terminate the contract
-        if block.timestamp >= nullificationTime {
+        if (block.timestamp >= nullificationTime) {
             nullifyContract();
         }
 
         // If the borrower has not deposited their required ETH yet, send the NFT to the contract 
-        if !ethIsDeposited {
-            nft.safeTransferFrom(msg.sender, address(this), _nftAddress);
+        if (!ethIsDeposited) {
+            nftCollection.safeTransferFrom(msg.sender, address(this), nftId);
             nftIsDeposited = true;
         } else {
-            nft.safeTransferFrom(msg.sender, borrowerAddress, _nftAddress);
-            // TODO: send lender the ETH rental payment from the contract (keeping collateral stored)
+            nftCollection.safeTransferFrom(msg.sender, borrowerAddress, nftId);
+            // Send lender the ETH rental payment from the contract (keeping collateral stored)
+            payable(lenderAddress).transfer(rentalPayment);
             nftIsDeposited = true;
             emit RentalStarted();
-            beginRental();
+            _beginRental();
         }
     }
 
     // After the contract is constructed with the parameters informally agreed upon off-chain
     // the borrower must deposit their required ETH in order to receive the NFT.
-    function depositEth() payable {
+    function depositEth() external payable {
 
         // Require that the sender is the borrower and that the payment amount is correct
-        require(!ethIsDeposited);
-        require(msg.sender == borrowerAddress);
-        require(msg.value == rentalPayment.add(collateral));
+        require(!ethIsDeposited, "The ETH has already been deposited");
+        require(msg.sender == borrowerAddress, "The msg sender does not match the borrower");
+        require(msg.value >= rentalPayment.add(collateral), "The msg value is less than the payment plus collateral");
 
         // If the current time is past the nullification contract, nullify the contract
-        if block.timestamp >= nullificationTime {
+        if (block.timestamp >= nullificationTime) {
+            // Send the borrower all of their ETH back
+            payable(msg.sender).transfer(msg.value);
+            // Nullify the contract
             nullifyContract();
         }
 
+        // If the borrower sent too much ETH, immediately refund them the extra ETH they sent 
+        if (msg.value > rentalPayment.add(collateral)) {
+            payable(msg.sender).transfer(msg.value.sub(rentalPayment.add(collateral)));
+        }
+
         // If the lender has not deposited their nft, send the ETH to the contract
-        if !nftIsDeposited {
-            // TODO: Transfer msg.value to contract
+        if (!nftIsDeposited) {
+            // TODO: Transfer msg.value to contract (this should actually be done as the function is called)
+
             ethIsDeposited = true;        
         } else { 
             // If the lender has deposited their nft, send the ETH directly to the lender
             // TODO: Transfer msg.value to lender
-            // TODO: Have contract send the NFT to the borrower
+
+            // Transfer the NFT from the contract to the borrower
+            nftCollection.safeTransferFrom(address(this), borrowerAddress, nftId);
             ethIsDeposited = true;
             emit RentalStarted();
-            beginRental();
+            _beginRental();
         }
     }
 
-    function withdrawNft() {
-        require(msg.sender == lenderAddress);
-        require(nftIsDeposited && !ethIsDepostited);
-        // TODO: have the contract send the nft back to the lender
+    function withdrawNft() external payable {
+
+        // Require that only the lender can withdraw the NFT
+        require(msg.sender == lenderAddress, "The lender must be the msg sender");
+
+        // Require that the NFT is in the contract and the ETH has not yet been deposited
+        require(nftIsDeposited && !ethIsDeposited, "Either the NFT is not yet deposited or the ETH has already been deposited");
+
+        // Send the nft back to the lender
+        nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
     }
 
-    function withdrawEth() {
-        require(msg.sender == borrowerAddress);
-        require(!nftIsDeposited && ethIsDespoited);
+    function withdrawEth() external payable {
+        require(msg.sender == borrowerAddress, "The borrower must be the msg sender");
+        require(!nftIsDeposited && ethIsDeposited, "Either the NFT is already deposited or the ETH is not yet deposited");
         // TODO: have the contract send the eth back to the borrower
+
     }
 
     // This function can be called by anyone at anytime (if the nullification period elapses,
     // this will likely be called by whichever party has their assets deposited in the contract.)
-    function public nullifyContract() {
+    function nullifyContract() public payable {
         // Check if the rental has not started yet and the nullification period has passes
         if (rentalStartTime == 0 && block.timestamp >= nullificationTime) {
-            if ethIsDeposited {
+            if (ethIsDeposited) {
                 // TODO: have the contract return the ETH to the borrower
             }
-            if nftIsDeposited {
+            if (nftIsDeposited) {
                 // TODO: have the contract return the NFT to the lender
             }
             emit ContractNullified();
@@ -206,13 +243,13 @@ contract Rental {
     }
 
     // This function is automatically called by the contract when the final required assets are deposited
-    function beginRental() {
+    function _beginRental() private {
         rentalStartTime = block.timestamp;
         collateralLeft = collateral;
     }
 
     // This function will be called by the borrower when they have returned the NFT to the contract
-    function returnNft() {
+    function returnNft() external {
         // TODO: Check if the borrower has returned the NFT to the contract
         bool nftIsReturned; // temporary variable to explain the following
         if (nftIsReturned == true && block.timestamp <= dueDate) {
@@ -232,4 +269,4 @@ contract Rental {
             // TODO: Terminate the contract
         }
     }
-
+}

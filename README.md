@@ -98,31 +98,35 @@ Used the following for style and structure guidance:
 ## Questions
 1. Is collateral required? If the NFT needs to be transfered to the borrower's EOA then collateral is likely required. 
 2. Do we need to inherit from ERC721? PawnBank does not, Takeover does, CRISP does but is also abstract, RICKS inherits from ERC20 and ERC721Holder...
-1. Are all my functions/variables properly scoped?
-2. Do I use memory/storage in the correct places?
-3. Which functions need to be payable?
+3. Are all my functions/variables properly scoped?
+4. Do I use memory/storage in the correct places?
+5. Which functions need to be payable?
     payable if you want to get money from the sender
     on the function that the borrower calls to put up their collateral (call a payable function with a certain amt)
     how would the contract send money back?
         not payable (only when function receives money)
         payable(address sending to).call({value: amt})
-4. Am I using immutable correctly?
-5. Do I use SafeMath/PRBMathSD59x18 in the correct places?
-6. What license should I use for this? GPL-3.0? MIT? Unliscence?
-7. Are there other error conditions I should consider?
-8. Who calls this contract? How do we make sure both parties consent to this agreement?
-9. What are clearest variable names?
+6. Am I using immutable correctly?
+7. Do I use SafeMath/PRBMathSD59x18 in the correct places?
+8. What license should I use for this? GPL-3.0? MIT? Unliscence?
+9. Are there other error conditions I should consider? How do I integrate these errors correctly?
+10. Who calls this contract? How do we make sure both parties consent to this agreement?
+11. What are clearest variable names?
     a. originalOwner vs lenderAddress?
     b. temporaryOwner vs borrowerAddress?
     c. expiry vs expirationTime?
     d. costToLease vs initialPayment?
-10. How can this be exploited?
-11. Should the LeaseNFT contract be abstract or should I implement each of the ERC721 functions?
-12. How could we accept other forms of collateral other than ETH?
-13. Users shouldn't have to redeploy this contract everytime they want to create a lease. Create a Lease struct
+12. How can this be exploited?
+13. Should the LeaseNFT contract be abstract or should I implement each of the ERC721 functions?
+14. How could we accept other forms of collateral other than ETH?
+15. Users shouldn't have to redeploy this contract everytime they want to create a lease. Create a Lease struct
     containing the relevant information for each lender-borrower-nft object and make a map of all live leases.
     The drawback of this is that everyone relies on the same contract, so if anything breaks risk/security is 
     spread across all users. The benefits is that it'll be cheaper for uses because they won't have to redeploy.
+16. Which functions should be view/pure?
+17. Do any get (view) functions need to be added?
+18. None of our functions have any returns. Should they have any?
+19. Am I handling ETH-Wei conversions correctly? Could a contract be created with a decimal ETH payment or collateral?
 
 
 ## To Do's:
