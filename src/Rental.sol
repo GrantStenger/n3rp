@@ -174,7 +174,7 @@ contract Rental {
 
         // If the borrower sent too much ETH, immediately refund them the extra ETH they sent 
         if (msg.value > rentalPayment + collateral) {
-            payable(msg.sender).transfer(msg.value - (rentalPayment + collateral)));
+            payable(msg.sender).transfer(msg.value - (rentalPayment + collateral));
         }
 
         // If the lender has not deposited their nft, send the ETH to the contract
