@@ -89,10 +89,14 @@ npm run lint
 
 ## Credits
 
-Used the following for style and structure guidance:
+Frontend Template: https://github.com/jonluca/vite-typescript-ssr-react
+
+Solidity and file structuring guidance:
 1. https://github.com/FrankieIsLost/CRISP
 2. https://github.com/Anish-Agnihotri/pawnft
 3. https://github.com/FrankieIsLost/RICKS
+4. https://github.com/m1guelpf/erc721-drop 
+5. https://github.com/FrankieIsLost/takeover 
 
 
 ## Questions
@@ -127,14 +131,20 @@ Used the following for style and structure guidance:
 17. Do any get (view) functions need to be added?
 18. None of our functions have any returns. Should they have any?
 19. Am I handling ETH-Wei conversions correctly? Could a contract be created with a decimal ETH payment or collateral?
+20. Do I need to do anything specific to terminate the contract?
+21. Confirm that the calculations for how much the lender can withdraw during and after the payout period is correct.
+22. What are standard solidity conventions about enters between functions, ifs, requires, etc?
+23. Make sure this code accords to standard solidity style guidelines.
 
 
 ## To Do's:
 1. Write tests
 2. Answer all of the above questions
-3. Add renew lease functionality
-4. Encode payment methods other than lump sum (periodic payments being an obvious alternative)
-5. Add auction structure where potential borrowers place bids for NFTs they'd like to borrow over specified time periods
+3. Deploy to EVM
+4. Add renew lease functionality
+5. Encode payment methods other than lump sum (periodic payments being an obvious alternative)
+6. Add auction structure where potential borrowers place bids for NFTs they'd like to borrow over specified time periods
+7. Deploy to Avalanche or Arbitrum
 
 
 ## Memes

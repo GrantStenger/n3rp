@@ -1,3 +1,4 @@
 cache/
 out/
-privateNotes.txt
+.DS_Store
+privateNotes.md
