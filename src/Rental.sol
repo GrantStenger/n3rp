@@ -99,7 +99,7 @@ contract Rental {
 
         // Require that the _borrowerAddress has more than _rentalPayment + _collateral
         require(
-            _borrowerAddress.balance >= _rentalPayment.add(_collateral),
+            _borrowerAddress.balance >= _rentalPayment + _collateral,
             "The borrower has less ETH than the rental payment plus collateral"
         );
 
@@ -163,7 +163,7 @@ contract Rental {
         // Require that the sender is the borrower and that the payment amount is correct
         require(!ethIsDeposited, "The ETH has already been deposited");
         require(msg.sender == borrowerAddress, "The msg sender does not match the borrower");
-        require(msg.value >= rentalPayment.add(collateral), "The msg value is less than the payment plus collateral");
+        require(msg.value >= rentalPayment + collateral, "The msg value is less than the payment plus collateral");
 
         // If the current time is past the nullification contract, nullify the contract
         if (block.timestamp >= nullificationTime) {
@@ -174,8 +174,8 @@ contract Rental {
         }
 
         // If the borrower sent too much ETH, immediately refund them the extra ETH they sent 
-        if (msg.value > rentalPayment.add(collateral)) {
-            payable(msg.sender).transfer(msg.value.sub(rentalPayment.add(collateral)));
+        if (msg.value > rentalPayment + collateral) {
+            payable(msg.sender).transfer(msg.value - (rentalPayment - collateral));
         }
 
         // If the lender has not deposited their nft, send the ETH to the contract
@@ -215,7 +215,7 @@ contract Rental {
         require(!nftIsDeposited && ethIsDeposited, "Either the NFT is already deposited or the ETH is not yet deposited");
 
         // Have the contract send the eth back to the borrower
-        payable(borrowerAddress).transfer(rentalPayment.add(collateral));
+        payable(borrowerAddress).transfer(rentalPayment + collateral);
 
     }
 
@@ -262,7 +262,7 @@ contract Rental {
             payable(borrowerAddress).transfer(collateral);
         }
         // Check if the NFT has been returned during the collateral payout period
-        else if (block.timestamp > dueDate && block.timestamp < dueDate.add(collateralPayoutPeriod)) {
+        else if (block.timestamp > dueDate && block.timestamp < dueDate + collateralPayoutPeriod) {
             // Return the NFT to the lender
             nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
             // Send the lender the collateral they are owed
@@ -282,11 +282,11 @@ contract Rental {
         uint256 withdrawableCollateral;
         uint256 timeLeftUntilFullyPaid = rentalStartTime + collateralPayoutPeriod - block.timestamp;
         if (timeLeftUntilFullyPaid > 0) {
-            withdrawableCollateral = address(this).balance.sub(collateral.mul(timeLeftUntilFullyPaid.div(collateralPayoutPeriod)));
+            withdrawableCollateral = address(this).balance - (collateral * timeLeftUntilFullyPaid) / collateralPayoutPeriod;
         } else {
             withdrawableCollateral = address(this).balance;
         }
-        
+
         // Send the lender the collateral they're able to withdraw
         payable(lenderAddress).transfer(withdrawableCollateral);
     }
