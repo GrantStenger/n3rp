@@ -128,7 +128,6 @@ contract Rental {
 
     // After the contract is constructed with the parameters informally agreed upon off-chain,
     // the lender must deposit the designated NFT if they want to receive the rental payment.
-    // The lender
     function depositNft() external payable {
 
         // Require that the sender is the lender who owns the NFT that the borrower expects
@@ -175,7 +174,7 @@ contract Rental {
 
         // If the borrower sent too much ETH, immediately refund them the extra ETH they sent 
         if (msg.value > rentalPayment + collateral) {
-            payable(msg.sender).transfer(msg.value - (rentalPayment - collateral));
+            payable(msg.sender).transfer(msg.value - (rentalPayment + collateral));
         }
 
         // If the lender has not deposited their nft, send the ETH to the contract
@@ -229,7 +228,7 @@ contract Rental {
             // Check if ETH has already been deposited by the borrower
             if (ethIsDeposited) {
                 // Have the contract return the ETH to the borrower
-                payable(borrowerAddress).transfer(rentalPayment+collateral);
+                payable(borrowerAddress).transfer(rentalPayment + collateral);
             }
 
             // Check if the NFT has already been deposited by the lender
@@ -282,7 +281,7 @@ contract Rental {
         uint256 withdrawableCollateral;
         uint256 timeLeftUntilFullyPaid = rentalStartTime + collateralPayoutPeriod - block.timestamp;
         if (timeLeftUntilFullyPaid > 0) {
-            withdrawableCollateral = address(this).balance - (collateral * timeLeftUntilFullyPaid) / collateralPayoutPeriod;
+            withdrawableCollateral = address(this).balance - collateral * timeLeftUntilFullyPaid / collateralPayoutPeriod;
         } else {
             withdrawableCollateral = address(this).balance;
         }
