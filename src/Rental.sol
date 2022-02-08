@@ -2,65 +2,64 @@
 pragma solidity 0.8.10;
 
 import { ERC721 } from "solmate/tokens/ERC721.sol";
-import { SafeMath } from "openzeppelin/SafeMath.sol";
 import {IERC721TokenReceiver} from "./interfaces/IERC721TokenReceiver.sol";
 
-
+/// @title Rental
+/// @author gstenger98, andreas <andreas@nascent.xyz>
+/// @notice A Collateral-based ERC721 Token Rental Protocol
 contract Rental {
 
-    // Use OpenZeppelin's SafeMath library
-    using SafeMath for uint256;
+    /// -------------------------------------------- ///
+    /// ---------------- IMMUTABLES ---------------- ///
+    /// -------------------------------------------- ///
 
-    /// ------------------------
-    /// ----- Parameters -------
-    /// ------------------------
-
-    // The address of the original owner
+    /// @notice The address of the original owner
     address public immutable lenderAddress;
 
-    // The address of the tempory borrower
+    /// @notice The address of the tempory borrower
     address public immutable borrowerAddress;
 
-    // The collection of the NFT to lend
+    /// @notice The collection of the NFT to lend
     ERC721 public immutable nftCollection;
 
-    // The the id of the NFT within the collection
+    /// @notice The the id of the NFT within the collection
     uint256 public immutable nftId;
 
-    // The expiration time of the rental
-    uint256 public immutable dueDate; // this will be a ethereum block time
+    /// @notice The expiration time of the rental
+    /// @dev Measured as a future block timestamp
+    uint256 public immutable dueDate;
 
-    // The amount of ETH the borrower must pay the lender in order to rent the NFT if returned on time
+    /// @notice The amount of ETH the borrower must pay the lender in order to rent the NFT if returned on time
     uint256 public immutable rentalPayment;
 
-    // The amount of additional ETH the lender requires as collateral
-    uint256 public immutable collateral; // security deposit
+    /// @notice The amount of additional ETH the lender requires as collateral
+    uint256 public immutable collateral;
 
-    // The amount of time the collateral will be linearly paid out over if the NFT isn't returned on time
+    /// @notice The amount of time the collateral will be linearly paid out over if the NFT isn't returned on time
     uint256 public immutable collateralPayoutPeriod;
 
-    // The contract deployoor specifies a period by which the assets must be deposited else the contract is voided
+    /// @notice The contract deployoor specifies a period by which the assets must be deposited else the contract is voided
     uint256 public immutable nullificationTime;
 
-    /// ----------------------
-    /// -------- State -------
-    /// ----------------------
+    /// -------------------------------------------- ///
+    /// ------------------- STATE ------------------ ///
+    /// -------------------------------------------- ///
 
-    // The time when the rental contract officially begins (NFT and rental payment just sent to borrower and lender)
+    /// @notice The time when the rental contract officially begins (NFT and rental payment just sent to borrower and lender)
     uint256 public rentalStartTime; // contractInitializationTime, startingTime, initializationTime
 
-    // The amount of collateral left in the contract
+    /// @notice The amount of collateral left in the contract
     uint256 public collateralLeft; // should collateralLeft and rentalStartTime be public or private?
 
-    // Store if the NFT has been deposited
+    /// @notice Store if the NFT has been deposited
     bool public nftIsDeposited; // really, the contract should have the capacity to look up if it is the nft owner
 
-    // Store if the borrower's required ETH has been deposited
+    /// @notice Store if the borrower's required ETH has been deposited
     bool public ethIsDeposited; // the contract should have the capacity to look up how much eth has been deposited into it
 
-    /// ---------------------------
-    /// -------- Events -----------
-    /// ---------------------------
+    /// -------------------------------------------- ///
+    /// ------------------- EVENTS ----------------- ///
+    /// -------------------------------------------- ///
 
     event ContractNullified();
     event RentalStarted();
@@ -68,9 +67,9 @@ contract Rental {
     event PayoutPeriodBegins();
     event PayoutPeriodEnds();
 
-    /// ---------------------------
-    /// --------- Errors ----------
-    /// ---------------------------
+    /// -------------------------------------------- ///
+    /// ------------------- ERRORS ----------------- ///
+    /// -------------------------------------------- ///
 
     error InsufficientValue();
     error FailedToSendEther();
@@ -85,9 +84,9 @@ contract Rental {
     error NonLender();
     error NonTokenOwner();
 
-    /// ---------------------------
-    /// ------- Functions ---------
-    /// ---------------------------
+    /// -------------------------------------------- ///
+    /// ---------------- CONSTRUCTOR --------------- ///
+    /// -------------------------------------------- ///
 
     /// @notice Permissionless Rental Creation
     constructor(
@@ -122,6 +121,10 @@ contract Rental {
         collateralPayoutPeriod = _collateralPayoutPeriod;
         nullificationTime = _nullificationTime;
     }
+
+    /// -------------------------------------------- ///
+    /// -------------- EXTERNAL LOGIC -------------- ///
+    /// -------------------------------------------- ///
 
     /// @notice Lender must deposit the ERC721 token to enable lending
     /// @notice First step after Rental Contract Construction
@@ -238,12 +241,6 @@ contract Rental {
         }
     }
 
-    // This function is automatically called by the contract when the final required assets are deposited
-    function _beginRental() private {
-        rentalStartTime = block.timestamp;
-        collateralLeft = collateral;
-    }
-
     // This function will be called by the borrower when they have returned the NFT to the contract
     function returnNft() external payable {
 
@@ -286,6 +283,20 @@ contract Rental {
         // Send the lender the collateral they're able to withdraw
         payable(lenderAddress).transfer(withdrawableCollateral);
     }
+
+    /// -------------------------------------------- ///
+    /// -------------- INTERNAL LOGIC -------------- ///
+    /// -------------------------------------------- ///
+
+    // This function is automatically called by the contract when the final required assets are deposited
+    function _beginRental() private {
+        rentalStartTime = block.timestamp;
+        collateralLeft = collateral;
+    }
+
+    /// -------------------------------------------- ///
+    /// ----------- ERC721 RECEIVER LOGIC ---------- ///
+    /// -------------------------------------------- ///
 
     /// @notice Allows this contract to custody ERC721 Tokens
     function onERC721Received(
