@@ -72,12 +72,18 @@ contract Rental {
     /// --------- Errors ----------
     /// ---------------------------
 
-    error InsufficientPayment();
+    error InsufficientValue();
     error FailedToSendEther();
     error Unauthorized();
     error IncorrectState();
     error NotEligibleForRewards();
     error InvalidToken();
+
+    error BadTimeBounds();
+
+    error AlreadyDeposited();
+    error NonLender();
+    error NonTokenOwner();
 
     /// ---------------------------
     /// ------- Functions ---------
@@ -85,8 +91,8 @@ contract Rental {
 
     // The contract deployor could be anyone but is most likely to be the borrower or lender. 
     constructor(
-        address payable _lenderAddress, // Should these be payable?
-        address payable _borrowerAddress, // Should any of these be memory/storage?
+        address _lenderAddress,
+        address _borrowerAddress,
         address _nftAddress,
         uint256 _nftId,
         uint256 _dueDate,
@@ -94,25 +100,16 @@ contract Rental {
         uint256 _collateral,
         uint256 _collateralPayoutPeriod,
         uint256 _nullificationTime
-    ) { // Do we need any modifiers? Should this return anything?
+    ) {
 
         // Require that the _lenderAddress owns the specified NFT
-        require(
-            ERC721(_nftAddress).ownerOf(_nftId) == _lenderAddress,
-            "The specified NFT is not currently owned by the lender"
-        );
+        if (ERC721(_nftAddress).ownerOf(_nftId) != _lenderAddress) revert NonTokenOwner();
 
         // Require that the _borrowerAddress has more than _rentalPayment + _collateral
-        require(
-            _borrowerAddress.balance >= _rentalPayment.add(_collateral),
-            "The borrower has less ETH than the rental payment plus collateral"
-        );
+        if (_borrowerAddress.balance < _rentalPayment.add(_collateral)) revert InsufficientValue();
 
         // Require that the expiry is in the future
-        require(
-            _dueDate < block.timestamp,
-            "The due date is earlier than right now"
-        );
+        if (_dueDate < block.timestamp) revert BadTimeBounds();
         
         // Assign our contract parameters
         lenderAddress = payable(_lenderAddress);
@@ -124,11 +121,6 @@ contract Rental {
         collateral = _collateral;
         collateralPayoutPeriod = _collateralPayoutPeriod;
         nullificationTime = _nullificationTime;
-
-        // Assign our initial state values
-        nftIsDeposited = false;
-        ethIsDeposited = false;
-
     }
 
     // After the contract is constructed with the parameters informally agreed upon off-chain,
@@ -137,9 +129,10 @@ contract Rental {
     function depositNft() external payable {
 
         // Require that the sender is the lender who owns the NFT that the borrower expects
-        require(!nftIsDeposited, "The NFT has already been deposited");
-        require(msg.sender == lenderAddress, "The msg sender must be the lender");
-        require(msg.sender == nftCollection.ownerOf(nftId), "The msg sender must own the NFT");
+        if (nftIsDeposited) revert AlreadyDeposited();
+        if (msg.sender != lenderAddress) revert NonLender();
+        if (msg.sender != nftCollection.ownerOf(nftId)) revert NonTokenOwner();
+
         // require(_nftAddress == address(nftCollection), "The submitted NFT does not match the initially agreed upon NFT");
 
         // If the nullification time has passed, emit this and terminate the contract
