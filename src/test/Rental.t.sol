@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
 
-import "ds-test/test.sol";
+import {DSTestPlus} from "./utils/DSTestPlus.sol";
 
-contract RentalTest is DSTest {
+contract RentalTest is DSTestPlus {
     function setUp() public {}
 
     function testExample() public {
