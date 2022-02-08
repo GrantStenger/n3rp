@@ -128,7 +128,7 @@ contract Rental {
 
     // After the contract is constructed with the parameters informally agreed upon off-chain,
     // the lender must deposit the designated NFT if they want to receive the rental payment.
-    // The lender 
+    // The lender
     function depositNft() external payable {
 
         // Require that the sender is the lender who owns the NFT that the borrower expects
