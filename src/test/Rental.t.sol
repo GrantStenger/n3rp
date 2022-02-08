@@ -136,7 +136,7 @@ contract RentalTest is DSTestPlus {
         // The rental should not have began since we didn't deposit eth
         assert(rental.nftIsDeposited() == true);
         assert(rental.rentalStartTime() == 0);
-        assert(rental.collateralLeft() == 0);
+        assert(rental.collectedCollateral() == 0);
 
         // We can't redeposit now even if we get the token back somehow
         startHoax(address(rental), address(rental), type(uint256).max);
@@ -163,7 +163,7 @@ contract RentalTest is DSTestPlus {
         assert(rental.ethIsDeposited() == true);
         assert(rental.nftIsDeposited() == false);
         assert(rental.rentalStartTime() == 0);
-        assert(rental.collateralLeft() == 0);
+        assert(rental.collectedCollateral() == 0);
 
         // The Lender Can Deposit
         startHoax(lenderAddress, lenderAddress, 0);
@@ -179,7 +179,6 @@ contract RentalTest is DSTestPlus {
         assert(lenderAddress.balance == rentalPayment);
 
         assert(rental.rentalStartTime() == block.timestamp);
-        assert(rental.collateralLeft() == collateral);
     }
 
     /// -------------------------------------------- ///
@@ -212,7 +211,6 @@ contract RentalTest is DSTestPlus {
         assert(rental.ethIsDeposited() == true);
         assert(rental.nftIsDeposited() == false);
         assert(rental.rentalStartTime() == 0);
-        assert(rental.collateralLeft() == 0);
 
         // We can't redeposit
         startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
@@ -252,7 +250,6 @@ contract RentalTest is DSTestPlus {
         assert(lenderAddress.balance == rentalPayment);
 
         assert(rental.rentalStartTime() == block.timestamp);
-        assert(rental.collateralLeft() == collateral);
     }
 
     /// -------------------------------------------- ///
@@ -328,11 +325,15 @@ contract RentalTest is DSTestPlus {
         // Jump to between the dueDate and full collateral payout
         vm.warp(dueDate + collateralPayoutPeriod / 2);
     
+        // Set the lender to have no eth
+        vm.deal(lenderAddress, 0);
+
         // The owner should be able to return to the lender with a decreased collateral return
         startHoax(borrowerAddress, borrowerAddress, 0);
         mockNft.approve(address(rental), tokenId);
         rental.returnNft();
         assert(borrowerAddress.balance == collateral / 2);
+        assert(lenderAddress.balance == collateral / 2);
         assert(mockNft.ownerOf(tokenId) == lenderAddress);
         vm.stopPrank();
     }
@@ -355,6 +356,9 @@ contract RentalTest is DSTestPlus {
 
         // Jump to after the collateral payout period
         vm.warp(dueDate + collateralPayoutPeriod);
+
+        // Set the lender to have no eth
+        vm.deal(lenderAddress, 0);
     
         // The borrower can't return the nft now that it's past the payout period
         // Realistically, this wouldn't be called by the borrower since it just transfers the NFT back to the lender
@@ -363,6 +367,77 @@ contract RentalTest is DSTestPlus {
         rental.returnNft();
         assert(borrowerAddress.balance == 0);
         assert(mockNft.ownerOf(tokenId) == lenderAddress);
+        assert(lenderAddress.balance == collateral);
+        vm.stopPrank();
+    }
+
+    /// -------------------------------------------- ///
+    /// ------------- WITHDRAW COLLATERAL ---------- ///
+    /// -------------------------------------------- ///
+
+    /// @notice Test withdrawing collateral
+    function testWithdrawCollateral() public {
+        // The Lender deposits
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        mockNft.approve(address(rental), tokenId);
+        rental.depositNft();
+        vm.stopPrank();
+
+        // The Borrower deposits
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        rental.depositEth{value: rentalPayment + collateral}();
+        vm.stopPrank();
+
+        // Can't withdraw collateral before the dueDate
+        startHoax(lenderAddress, lenderAddress, 0);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
+        rental.withdrawCollateral();
+        vm.stopPrank();
+
+        // The borrower should own the NFT now
+        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
+
+        // Jump to after the collateral payout period
+        vm.warp(dueDate + collateralPayoutPeriod);
+
+        // Set both to have no eth
+        vm.deal(lenderAddress, 0);
+        vm.deal(borrowerAddress, 0);
+    
+        // The lender can withdraw the collateral
+        startHoax(lenderAddress, lenderAddress, 0);
+        rental.withdrawCollateral();
+        assert(borrowerAddress.balance == 0);
+        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
+        assert(lenderAddress.balance == collateral);
+        vm.stopPrank();
+    }
+
+    /// @notice Test the borrower can withdraw the balance if the lender never deposits
+    function testWithdrawCollateralNoLender() public {
+        uint256 fullPayment = rentalPayment + collateral;
+        // The Borrower deposits
+        startHoax(borrowerAddress, borrowerAddress, fullPayment);
+        rental.depositEth{value: fullPayment}();
+        vm.stopPrank();
+
+        // Can't withdraw collateral before the dueDate
+        startHoax(lenderAddress, lenderAddress, 0);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
+        rental.withdrawCollateral();
+        vm.stopPrank();
+
+        // Jump to after the collateral payout period
+        vm.warp(dueDate + collateralPayoutPeriod);
+
+        // Set both to have no eth
+        vm.deal(lenderAddress, 0);
+        vm.deal(borrowerAddress, 0);
+    
+        // The borrower can withdraw the full contract balance
+        startHoax(borrowerAddress, borrowerAddress, 0);
+        rental.withdrawCollateral();
+        assert(borrowerAddress.balance == fullPayment);
         vm.stopPrank();
     }
 }

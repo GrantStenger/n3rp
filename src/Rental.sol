@@ -49,9 +49,6 @@ contract Rental {
     /// @dev NFT and rental payment have been sent to borrower and lender when this isn't zero
     uint256 public rentalStartTime;
 
-    /// @notice The amount of collateral left in the contract
-    uint256 public collateralLeft;
-
     /// @notice The amount of collateral collected by the lender
     uint256 public collectedCollateral;
 
@@ -256,7 +253,7 @@ contract Rental {
             payable(borrowerAddress).transfer(collateral);
         }
         // Check if the NFT has been returned during the collateral payout period
-        else if (block.timestamp > dueDate && block.timestamp < dueDate + collateralPayoutPeriod) {
+        else if (block.timestamp > dueDate) {
             // Send the lender the collateral they are owed
             withdrawCollateral();
             // Send the borrower the collateral that is left
@@ -272,7 +269,7 @@ contract Rental {
 
         uint256 tardiness = block.timestamp - dueDate;
         uint256 payableAmount;
-        if (tardiness > collateralPayoutPeriod) {
+        if (tardiness >= collateralPayoutPeriod) {
             payableAmount = collateral;
         } else {
             payableAmount = (tardiness * collateral) / collateralPayoutPeriod;
@@ -284,8 +281,13 @@ contract Rental {
         // sstore the collected collateral
         collectedCollateral += payableAmount;
 
-        // Send the lender the collateral they're able to withdraw
-        payable(lenderAddress).transfer(payableAmount);
+        if(ethIsDeposited && nftIsDeposited) {
+            // Send the lender the collateral they're able to withdraw
+            payable(lenderAddress).transfer(payableAmount);
+        } else {
+            // The lender never transferred the NFT so the borrow should be able to withdraw the entire balance
+            payable(borrowerAddress).transfer(address(this).balance);
+        }
     }
 
     /// -------------------------------------------- ///
@@ -295,7 +297,6 @@ contract Rental {
     // This function is automatically called by the contract when the final required assets are deposited
     function _beginRental() internal {
         rentalStartTime = block.timestamp;
-        collateralLeft = collateral;
     }
 
     /// -------------------------------------------- ///
