@@ -94,12 +94,15 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
     }
 
+    /// -------------------------------------------- ///
+    /// ---------------- DEPOSIT NFT --------------- ///
+    /// -------------------------------------------- ///
 
     /// @notice Tests depositing an NFT into the Rental Contract
     function testDepositNFT() public {
         // Expect Revert when we don't send from the lender address
         startHoax(address(1), address(1), type(uint256).max);
-        vm.expectRevert(abi.encodePacked(bytes4(keccak256("NonLender()"))));
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
         rental.depositNft();
         vm.stopPrank();
 
@@ -142,6 +145,224 @@ contract RentalTest is DSTestPlus {
         startHoax(lenderAddress, lenderAddress, type(uint256).max);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("AlreadyDeposited()"))));
         rental.depositNft();
+        vm.stopPrank();
+    }
+
+    /// @notice Tests depositing the NFT into the contract after the borrower deposits eth
+    function testDepositETHthenNFT() public {
+        // Rental should not have any eth or nft deposited at this point
+        assert(rental.ethIsDeposited() == false);
+        assert(rental.nftIsDeposited() == false);
+
+        // The Borrower can deposit eth
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        rental.depositEth{value: rentalPayment + collateral}();
+        vm.stopPrank();
+
+        // Eth should be deposited
+        assert(rental.ethIsDeposited() == true);
+        assert(rental.nftIsDeposited() == false);
+        assert(rental.rentalStartTime() == 0);
+        assert(rental.collateralLeft() == 0);
+
+        // The Lender Can Deposit
+        startHoax(lenderAddress, lenderAddress, 0);
+        mockNft.approve(address(rental), tokenId);
+        rental.depositNft();
+        vm.stopPrank();
+
+        // The rental should now begin!
+        assert(rental.ethIsDeposited() == true);
+        assert(rental.nftIsDeposited() == true);
+
+        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
+        assert(lenderAddress.balance == rentalPayment);
+
+        assert(rental.rentalStartTime() == block.timestamp);
+        assert(rental.collateralLeft() == collateral);
+    }
+
+    /// -------------------------------------------- ///
+    /// ---------------- DEPOSIT ETH --------------- ///
+    /// -------------------------------------------- ///
+
+    /// @notice Tests depositing ETH into the Rental Contract
+    function testDepositETH() public {
+        // Expect Revert when we don't send from the borrower address
+        startHoax(address(1), address(1), type(uint256).max);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
+        rental.depositEth();
+        vm.stopPrank();
+
+        // Expect Revert if not enough eth is sent as a value
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("InsufficientValue()"))));
+        rental.depositEth();
+        vm.stopPrank();
+
+        // Rental should not have any eth deposited at this point
+        assert(rental.ethIsDeposited() == false);
+
+        // The Borrower can deposit eth
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        rental.depositEth{value: rentalPayment + collateral}();
+        vm.stopPrank();
+
+        // The rental should not have began since the lender hasn't deposited the nft
+        assert(rental.ethIsDeposited() == true);
+        assert(rental.nftIsDeposited() == false);
+        assert(rental.rentalStartTime() == 0);
+        assert(rental.collateralLeft() == 0);
+
+        // We can't redeposit
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("AlreadyDeposited()"))));
+        rental.depositEth();
+        vm.stopPrank();
+    }
+
+    /// @notice Tests depositing ETH into the Rental Contract after the NFT is deposited
+    function testDepositNFTandETH() public {
+        // Rental should not have any eth or nft deposited at this point
+        assert(rental.ethIsDeposited() == false);
+        assert(rental.nftIsDeposited() == false);
+
+        // The Lender Can Deposit
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        mockNft.approve(address(rental), tokenId);
+        rental.depositNft();
+        vm.stopPrank();
+
+        // The nft should be deposited
+        assert(rental.nftIsDeposited() == true);
+
+        // Set the lender's balance to 0 to realize the eth transferred from the contract
+        vm.deal(lenderAddress, 0);
+
+        // The Borrower can deposit eth
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        rental.depositEth{value: rentalPayment + collateral}();
+        vm.stopPrank();
+
+        // The rental should now begin!
+        assert(rental.ethIsDeposited() == true);
+        assert(rental.nftIsDeposited() == true);
+
+        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
+        assert(lenderAddress.balance == rentalPayment);
+
+        assert(rental.rentalStartTime() == block.timestamp);
+        assert(rental.collateralLeft() == collateral);
+    }
+
+    /// -------------------------------------------- ///
+    /// ----------------- RETURN NFT --------------- ///
+    /// -------------------------------------------- ///
+
+    /// @notice Tests returning the NFT on time
+    function testReturnNFT() public {
+        // The Lender deposits
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        mockNft.approve(address(rental), tokenId);
+        rental.depositNft();
+        vm.stopPrank();
+
+        // The Borrower deposits
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        rental.depositEth{value: rentalPayment + collateral}();
+        vm.stopPrank();
+
+
+        // A non-owner of the erc721 token id shouldn't be able to transfer
+        startHoax(address(1), address(1), type(uint256).max);
+        vm.expectRevert("WRONG_FROM");
+        rental.returnNft();
+        vm.stopPrank();
+
+        // Can't transfer without approval
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        vm.expectRevert("NOT_AUTHORIZED");
+        rental.returnNft();
+        vm.stopPrank();
+
+        // The borrower should own the NFT now
+        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
+    
+        // The owner should be able to return to the lender
+        startHoax(borrowerAddress, borrowerAddress, 0);
+        mockNft.approve(address(rental), tokenId);
+        rental.returnNft();
+        assert(borrowerAddress.balance == collateral);
+        assert(mockNft.ownerOf(tokenId) == lenderAddress);
+        vm.stopPrank();
+    }
+
+    /// @notice Tests returning the NFT late
+    function testReturnNFTLate() public {
+        // The Lender deposits
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        mockNft.approve(address(rental), tokenId);
+        rental.depositNft();
+        vm.stopPrank();
+
+        // The Borrower deposits
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        rental.depositEth{value: rentalPayment + collateral}();
+        vm.stopPrank();
+
+        // A non-owner of the erc721 token id shouldn't be able to transfer
+        startHoax(address(1), address(1), type(uint256).max);
+        vm.expectRevert("WRONG_FROM");
+        rental.returnNft();
+        vm.stopPrank();
+
+        // Can't transfer without approval
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        vm.expectRevert("NOT_AUTHORIZED");
+        rental.returnNft();
+        vm.stopPrank();
+
+        // The borrower should own the NFT now
+        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
+
+        // Jump to between the dueDate and full collateral payout
+        vm.warp(dueDate + collateralPayoutPeriod / 2);
+    
+        // The owner should be able to return to the lender with a decreased collateral return
+        startHoax(borrowerAddress, borrowerAddress, 0);
+        mockNft.approve(address(rental), tokenId);
+        rental.returnNft();
+        assert(borrowerAddress.balance == collateral / 2);
+        assert(mockNft.ownerOf(tokenId) == lenderAddress);
+        vm.stopPrank();
+    }
+
+    /// @notice Tests unable to return NFT since past collateral payout period
+    function testReturnNFTFail() public {
+        // The Lender deposits
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        mockNft.approve(address(rental), tokenId);
+        rental.depositNft();
+        vm.stopPrank();
+
+        // The Borrower deposits
+        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        rental.depositEth{value: rentalPayment + collateral}();
+        vm.stopPrank();
+
+        // The borrower should own the NFT now
+        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
+
+        // Jump to after the collateral payout period
+        vm.warp(dueDate + collateralPayoutPeriod);
+    
+        // The borrower can't return the nft now that it's past the payout period
+        // Realistically, this wouldn't be called by the borrower since it just transfers the NFT back to the lender
+        startHoax(borrowerAddress, borrowerAddress, 0);
+        mockNft.approve(address(rental), tokenId);
+        rental.returnNft();
+        assert(borrowerAddress.balance == 0);
+        assert(mockNft.ownerOf(tokenId) == lenderAddress);
         vm.stopPrank();
     }
 }

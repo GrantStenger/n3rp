@@ -45,17 +45,21 @@ contract Rental {
     /// ------------------- STATE ------------------ ///
     /// -------------------------------------------- ///
 
-    /// @notice The time when the rental contract officially begins (NFT and rental payment just sent to borrower and lender)
-    uint256 public rentalStartTime; // contractInitializationTime, startingTime, initializationTime
+    /// @notice The time when the rental contract officially begins
+    /// @dev NFT and rental payment have been sent to borrower and lender when this isn't zero
+    uint256 public rentalStartTime;
 
     /// @notice The amount of collateral left in the contract
-    uint256 public collateralLeft; // should collateralLeft and rentalStartTime be public or private?
+    uint256 public collateralLeft;
+
+    /// @notice The amount of collateral collected by the lender
+    uint256 public collectedCollateral;
 
     /// @notice Store if the NFT has been deposited
-    bool public nftIsDeposited; // really, the contract should have the capacity to look up if it is the nft owner
+    bool public nftIsDeposited;
 
     /// @notice Store if the borrower's required ETH has been deposited
-    bool public ethIsDeposited; // the contract should have the capacity to look up how much eth has been deposited into it
+    bool public ethIsDeposited;
 
     /// -------------------------------------------- ///
     /// ------------------- EVENTS ----------------- ///
@@ -74,14 +78,13 @@ contract Rental {
     error InsufficientValue();
     error FailedToSendEther();
     error Unauthorized();
-    error IncorrectState();
+    error InvalidState();
     error NotEligibleForRewards();
     error InvalidToken();
 
     error BadTimeBounds();
 
     error AlreadyDeposited();
-    error NonLender();
     error NonTokenOwner();
 
     /// -------------------------------------------- ///
@@ -133,7 +136,7 @@ contract Rental {
         if (nftIsDeposited) revert AlreadyDeposited();
 
         // The ERC721 Token Depositer must be the lender
-        if (msg.sender != lenderAddress) revert NonLender();
+        if (msg.sender != lenderAddress) revert Unauthorized();
 
         // If the nullification time has passed, emit this and terminate the contract
         if (block.timestamp >= nullificationTime) {
@@ -154,15 +157,16 @@ contract Rental {
         }
     }
 
-    // After the contract is constructed with the parameters informally agreed upon off-chain
-    // the borrower must deposit their required ETH in order to receive the NFT.
-
+    /// @notice Allows the borrow to post rent plus collateral
+    /// @notice Transfers the NFT to the borrower if the token has been deposited by the lender
     function depositEth() external payable {
+        // We don't accept double deposits
+        if (ethIsDeposited) revert AlreadyDeposited();
 
-        // Require that the sender is the borrower and that the payment amount is correct
-        require(!ethIsDeposited, "The ETH has already been deposited");
-        require(msg.sender == borrowerAddress, "The msg sender does not match the borrower");
-        require(msg.value >= rentalPayment + collateral, "The msg value is less than the payment plus collateral");
+        // The ETH Depositer must be the borrower
+        if (msg.sender != borrowerAddress) revert Unauthorized();
+
+        if (msg.value < rentalPayment + collateral) revert InsufficientValue();
 
         // If the current time is past the nullification contract, nullify the contract
         if (block.timestamp >= nullificationTime) {
@@ -182,8 +186,8 @@ contract Rental {
             // The msg.value is automatically sent to the contract
             ethIsDeposited = true;        
         } else { 
-            // If the lender has deposited their nft, send the ETH directly to the lender
-            payable(lenderAddress).transfer(msg.value);
+            // If the lender has deposited their nft, send the rental payment eth to the lender
+            payable(lenderAddress).transfer(rentalPayment);
             // Transfer the NFT from the contract to the borrower
             nftCollection.safeTransferFrom(address(this), borrowerAddress, nftId);
             ethIsDeposited = true;
@@ -241,23 +245,18 @@ contract Rental {
         }
     }
 
-    // This function will be called by the borrower when they have returned the NFT to the contract
-    function returnNft() external payable {
-
-        // Check if the borrower has returned the NFT to the contract
-        require(nftCollection.ownerOf(nftId) == address(this));
+    /// @notice Allows the Borrower to return the borrowed NFT
+    function returnNft() external {
+        // Return the NFT from the borrower to the lender
+        nftCollection.safeTransferFrom(msg.sender, lenderAddress, nftId);
 
         // Check if the NFT has been returned on time
         if (block.timestamp <= dueDate) {
-            // Return the NFT to the lender
-            nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
             // Return the collateral to the borrower
             payable(borrowerAddress).transfer(collateral);
         }
         // Check if the NFT has been returned during the collateral payout period
         else if (block.timestamp > dueDate && block.timestamp < dueDate + collateralPayoutPeriod) {
-            // Return the NFT to the lender
-            nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
             // Send the lender the collateral they are owed
             withdrawCollateral();
             // Send the borrower the collateral that is left
@@ -265,23 +264,28 @@ contract Rental {
         }
     }
 
-    // This function will likely be called by the lender but could be called by anyone.
-    // It transfers to the lender the amount of collateral that is owed to them
-    function withdrawCollateral() public payable {
+    /// @notice Transfers the amount of collateral owed to the lender
+    /// @dev Anyone can call to withdraw collateral to lender
+    function withdrawCollateral() public {
         // This can only be called after the rental due date has passed and the payout period has begun
-        require(block.timestamp > dueDate);
+        if (block.timestamp <= dueDate) revert InvalidState();
 
-        // Calculate how much the lender should be able to withdraw
-        uint256 withdrawableCollateral;
-        uint256 timeLeftUntilFullyPaid = rentalStartTime + collateralPayoutPeriod - block.timestamp;
-        if (timeLeftUntilFullyPaid > 0) {
-            withdrawableCollateral = address(this).balance - collateral * timeLeftUntilFullyPaid / collateralPayoutPeriod;
+        uint256 tardiness = block.timestamp - dueDate;
+        uint256 payableAmount;
+        if (tardiness > collateralPayoutPeriod) {
+            payableAmount = collateral;
         } else {
-            withdrawableCollateral = address(this).balance;
+            payableAmount = (tardiness * collateral) / collateralPayoutPeriod;
         }
 
+        // Remove what the lender already collected
+        payableAmount -= collectedCollateral;
+
+        // sstore the collected collateral
+        collectedCollateral += payableAmount;
+
         // Send the lender the collateral they're able to withdraw
-        payable(lenderAddress).transfer(withdrawableCollateral);
+        payable(lenderAddress).transfer(payableAmount);
     }
 
     /// -------------------------------------------- ///
@@ -289,7 +293,7 @@ contract Rental {
     /// -------------------------------------------- ///
 
     // This function is automatically called by the contract when the final required assets are deposited
-    function _beginRental() private {
+    function _beginRental() internal {
         rentalStartTime = block.timestamp;
         collateralLeft = collateral;
     }
