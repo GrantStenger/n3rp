@@ -62,7 +62,6 @@ contract Rental {
     /// ------------------- EVENTS ----------------- ///
     /// -------------------------------------------- ///
 
-    event ContractNullified();
     event RentalStarted();
     event NftReturned();
     event PayoutPeriodBegins();
@@ -73,14 +72,9 @@ contract Rental {
     /// -------------------------------------------- ///
 
     error InsufficientValue();
-    error FailedToSendEther();
     error Unauthorized();
     error InvalidState();
-    error NotEligibleForRewards();
-    error InvalidToken();
-
     error BadTimeBounds();
-
     error AlreadyDeposited();
     error NonTokenOwner();
 
@@ -135,9 +129,9 @@ contract Rental {
         // The ERC721 Token Depositer must be the lender
         if (msg.sender != lenderAddress) revert Unauthorized();
 
-        // If the nullification time has passed, emit this and terminate the contract
+        // If the nullification time has passed, self destruct
         if (block.timestamp >= nullificationTime) {
-            nullifyContract();
+            selfdestruct(payable(borrowerAddress));
         }
 
         // If the borrower has not deposited their required ETH yet, send the NFT to the contract 
@@ -165,12 +159,12 @@ contract Rental {
 
         if (msg.value < rentalPayment + collateral) revert InsufficientValue();
 
-        // If the current time is past the nullification contract, nullify the contract
+        // If the nullification time has passed, self destruct
         if (block.timestamp >= nullificationTime) {
-            // Send the borrower all of their ETH back
-            payable(msg.sender).transfer(msg.value);
-            // Nullify the contract
-            nullifyContract();
+            if (nftCollection.ownerOf(nftId) == address(this)) {
+                nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
+            }
+            selfdestruct(payable(borrowerAddress));
         }
 
         // If the borrower sent too much ETH, immediately refund them the extra ETH they sent 
@@ -193,53 +187,28 @@ contract Rental {
         }
     }
 
+    /// @notice Allows the lender to withdraw an nft if the borrower doesn't deposit
     function withdrawNft() external payable {
-
         // Require that only the lender can withdraw the NFT
-        require(msg.sender == lenderAddress, "The lender must be the msg sender");
+        if (msg.sender != lenderAddress) revert Unauthorized();
 
         // Require that the NFT is in the contract and the ETH has not yet been deposited
-        require(nftIsDeposited && !ethIsDeposited, "Either the NFT is not yet deposited or the ETH has already been deposited");
+        if (!nftIsDeposited || ethIsDeposited) revert InvalidState();
 
         // Send the nft back to the lender
         nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
-
     }
 
+    /// @notice Allows the borrower to withdraw eth if the lender doesn't deposit
     function withdrawEth() external payable {
-
         // Require that only the borrower can call this function
-        require(msg.sender == borrowerAddress, "The borrower must be the msg sender");
+        if (msg.sender != borrowerAddress) revert Unauthorized();
 
         // Require that the ETH has already been deposited and the NFT has not been
-        require(!nftIsDeposited && ethIsDeposited, "Either the NFT is already deposited or the ETH is not yet deposited");
+        if (nftIsDeposited || !ethIsDeposited) revert InvalidState();
 
         // Have the contract send the eth back to the borrower
         payable(borrowerAddress).transfer(rentalPayment + collateral);
-
-    }
-
-    // This function can be called by anyone at anytime (if the nullification period elapses,
-    // this will likely be called by whichever party has their assets deposited in the contract.)
-    function nullifyContract() public payable {
-
-        // Check if the rental has not started yet and the nullification period has passes
-        if (rentalStartTime == 0 && block.timestamp >= nullificationTime) {
-
-            // Check if ETH has already been deposited by the borrower
-            if (ethIsDeposited) {
-                // Have the contract return the ETH to the borrower
-                payable(borrowerAddress).transfer(rentalPayment + collateral);
-            }
-
-            // Check if the NFT has already been deposited by the lender
-            if (nftIsDeposited) {
-                // Have the contract return the NFT to the lender
-                nftCollection.safeTransferFrom(address(this), lenderAddress, nftId);
-            }
-
-            emit ContractNullified();
-        }
     }
 
     /// @notice Allows the Borrower to return the borrowed NFT

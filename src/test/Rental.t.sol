@@ -253,6 +253,81 @@ contract RentalTest is DSTestPlus {
     }
 
     /// -------------------------------------------- ///
+    /// ---------------- WITHDRAW NFT -------------- ///
+    /// -------------------------------------------- ///
+
+    /// @notice Test Withdrawing NFT
+    function testWithdrawNft() public {
+        uint256 fullPayment = rentalPayment + collateral;
+
+        // Can't withdraw if the nft hasn't been deposited
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
+        rental.withdrawNft();
+        vm.stopPrank();
+
+        // The Lender deposits
+        startHoax(lenderAddress, lenderAddress, fullPayment);
+        mockNft.approve(address(rental), tokenId);
+        rental.depositNft();
+        vm.stopPrank();
+
+        // Can't withdraw if not the lender
+        startHoax(address(1), address(1), type(uint256).max);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
+        rental.withdrawNft();
+        vm.stopPrank();
+
+        // The Lender doesn't own the NFT here
+        assert(mockNft.ownerOf(tokenId) == address(rental));
+    
+        // The lender can withdraw the NFT
+        startHoax(lenderAddress, lenderAddress, 0);
+        rental.withdrawNft();
+        vm.stopPrank();
+
+        // The Lender should now own the Token
+        assert(mockNft.ownerOf(tokenId) == lenderAddress);
+    }
+
+    /// -------------------------------------------- ///
+    /// ---------------- WITHDRAW ETH -------------- ///
+    /// -------------------------------------------- ///
+
+    /// @notice Test Withdrawing ETH
+    function testWithdrawETH() public {
+        uint256 fullPayment = rentalPayment + collateral;
+
+        // Can't withdraw if the eth hasn't been deposited
+        startHoax(borrowerAddress, borrowerAddress, fullPayment);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
+        rental.withdrawEth();
+        vm.stopPrank();
+
+        // The Borrower deposits
+        startHoax(borrowerAddress, borrowerAddress, fullPayment);
+        rental.depositEth{value: fullPayment}();
+        vm.stopPrank();
+
+        // Can't withdraw if not the borrower
+        startHoax(address(1), address(1), type(uint256).max);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
+        rental.withdrawEth();
+        vm.stopPrank();
+
+        // Set both to have no eth
+        vm.deal(borrowerAddress, 0);
+    
+        // The borrower can withdraw the full contract balance
+        startHoax(borrowerAddress, borrowerAddress, 0);
+        rental.withdrawEth();
+        vm.stopPrank();
+
+        // The borrower should have their full deposit returned
+        assert(borrowerAddress.balance == fullPayment);
+    }
+
+    /// -------------------------------------------- ///
     /// ----------------- RETURN NFT --------------- ///
     /// -------------------------------------------- ///
 
