@@ -102,5 +102,46 @@ contract RentalTest is DSTestPlus {
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("NonLender()"))));
         rental.depositNft();
         vm.stopPrank();
+
+        // Expect Revert if the lender doesn't own the token
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        mockNft.transferFrom(lenderAddress, address(1), tokenId);
+        vm.expectRevert("WRONG_FROM");
+        rental.depositNft();
+        vm.stopPrank();
+
+        // Transfer the token back to the lender
+        startHoax(address(1), address(1), type(uint256).max);
+        mockNft.transferFrom(address(1), lenderAddress, tokenId);
+        vm.stopPrank();
+
+        // The Rental can't transfer if we don't approve it
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        vm.expectRevert("NOT_AUTHORIZED");
+        rental.depositNft();
+        vm.stopPrank();
+
+        // Rental should not have any eth deposited at this point
+        assert(rental.ethIsDeposited() == false);
+
+        // The Lender Can Deposit
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        mockNft.approve(address(rental), tokenId);
+        rental.depositNft();
+        vm.stopPrank();
+
+        // The rental should not have began since we didn't deposit eth
+        assert(rental.nftIsDeposited() == true);
+        assert(rental.rentalStartTime() == 0);
+        assert(rental.collateralLeft() == 0);
+
+        // We can't redeposit now even if we get the token back somehow
+        startHoax(address(rental), address(rental), type(uint256).max);
+        mockNft.transferFrom(address(rental), lenderAddress, tokenId);
+        vm.stopPrank();
+        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        vm.expectRevert(abi.encodePacked(bytes4(keccak256("AlreadyDeposited()"))));
+        rental.depositNft();
+        vm.stopPrank();
     }
 }

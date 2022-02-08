@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
 
-// ============ Imports ============
 import { ERC721 } from "solmate/tokens/ERC721.sol";
 import { SafeMath } from "openzeppelin/SafeMath.sol";
+import {IERC721TokenReceiver} from "./interfaces/IERC721TokenReceiver.sol";
 
 
 contract Rental {
@@ -53,10 +53,10 @@ contract Rental {
     uint256 public collateralLeft; // should collateralLeft and rentalStartTime be public or private?
 
     // Store if the NFT has been deposited
-    bool private nftIsDeposited; // really, the contract should have the capacity to look up if it is the nft owner
+    bool public nftIsDeposited; // really, the contract should have the capacity to look up if it is the nft owner
 
     // Store if the borrower's required ETH has been deposited
-    bool private ethIsDeposited; // the contract should have the capacity to look up how much eth has been deposited into it
+    bool public ethIsDeposited; // the contract should have the capacity to look up how much eth has been deposited into it
 
     /// ---------------------------
     /// -------- Events -----------
@@ -89,7 +89,7 @@ contract Rental {
     /// ------- Functions ---------
     /// ---------------------------
 
-    // The contract deployor could be anyone but is most likely to be the borrower or lender. 
+    /// @notice Permissionless Rental Creation
     constructor(
         address _lenderAddress,
         address _borrowerAddress,
@@ -123,17 +123,14 @@ contract Rental {
         nullificationTime = _nullificationTime;
     }
 
-    // After the contract is constructed with the parameters informally agreed upon off-chain,
-    // the lender must deposit the designated NFT if they want to receive the rental payment.
-    // The lender 
+    /// @notice Lender must deposit the ERC721 token to enable lending
+    /// @notice First step after Rental Contract Construction
     function depositNft() external payable {
-
-        // Require that the sender is the lender who owns the NFT that the borrower expects
+        // We don't accept double deposits
         if (nftIsDeposited) revert AlreadyDeposited();
-        if (msg.sender != lenderAddress) revert NonLender();
-        if (msg.sender != nftCollection.ownerOf(nftId)) revert NonTokenOwner();
 
-        // require(_nftAddress == address(nftCollection), "The submitted NFT does not match the initially agreed upon NFT");
+        // The ERC721 Token Depositer must be the lender
+        if (msg.sender != lenderAddress) revert NonLender();
 
         // If the nullification time has passed, emit this and terminate the contract
         if (block.timestamp >= nullificationTime) {
@@ -156,6 +153,7 @@ contract Rental {
 
     // After the contract is constructed with the parameters informally agreed upon off-chain
     // the borrower must deposit their required ETH in order to receive the NFT.
+
     function depositEth() external payable {
 
         // Require that the sender is the borrower and that the payment amount is correct
@@ -287,5 +285,15 @@ contract Rental {
         
         // Send the lender the collateral they're able to withdraw
         payable(lenderAddress).transfer(withdrawableCollateral);
+    }
+
+    /// @notice Allows this contract to custody ERC721 Tokens
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external returns (bytes4) {
+        return IERC721TokenReceiver.onERC721Received.selector;
     }
 }
