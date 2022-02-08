@@ -3,13 +3,8 @@ pragma solidity 0.8.10;
 
 // ============ Imports ============
 import { ERC721 } from "solmate/tokens/ERC721.sol";
-import { SafeMath } from "openzeppelin/SafeMath.sol";
-
 
 contract Rental {
-
-    // Use OpenZeppelin's SafeMath library
-    using SafeMath for uint256;
 
     /// ------------------------
     /// ----- Parameters -------
@@ -83,7 +78,7 @@ contract Rental {
     /// ------- Functions ---------
     /// ---------------------------
 
-    // The contract deployor could be anyone but is most likely to be the borrower or lender. 
+    // The contract deployor could be anyone but is most likely to be the borrower or lender.
     constructor(
         address payable _lenderAddress, // Should these be payable?
         address payable _borrowerAddress, // Should any of these be memory/storage?
@@ -113,7 +108,7 @@ contract Rental {
             _dueDate < block.timestamp,
             "The due date is earlier than right now"
         );
-        
+
         // Assign our contract parameters
         lenderAddress = payable(_lenderAddress);
         borrowerAddress = payable(_borrowerAddress);
