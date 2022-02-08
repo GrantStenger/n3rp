@@ -228,7 +228,7 @@ contract Rental {
             // Check if ETH has already been deposited by the borrower
             if (ethIsDeposited) {
                 // Have the contract return the ETH to the borrower
-                payable(borrowerAddress).transfer(rentalPayment+collateral);
+                payable(borrowerAddress).transfer(rentalPayment + collateral);
             }
 
             // Check if the NFT has already been deposited by the lender
@@ -279,7 +279,7 @@ contract Rental {
         } else {
             withdrawableCollateral = address(this).balance;
         }
-        
+
         // Send the lender the collateral they're able to withdraw
         payable(lenderAddress).transfer(withdrawableCollateral);
     }
