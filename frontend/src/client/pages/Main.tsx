@@ -1,13 +1,13 @@
 import React from "react";
 import { Footer } from "../components/Footer";
-import { Header } from "../components/Header";
+import { Navbar } from "../components/Navbar";
 import { useAppContext } from "../Context";
 
 const Main = () => {
   const { name, setName } = useAppContext();
   return (
     <div className="flex bg-white-100 font-sans items-center flex-col justify-between h-screen">
-      <Header />
+      <Navbar />
       <div className="flex items-center flex-col pt-10">
         <h1 className="font-bold text-gray-900 text-5xl lg:text-7xl text-center ">Hi{name ? `, ${name}!` : ""}</h1>
         <h2 className={"w-2/5 p-5 items-center flex align-middle text-center min-w-[320px]"} style={{ color: "green" }}>
