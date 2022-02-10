@@ -1,11 +1,11 @@
 import React from "react";
-import { logo } from "../../../static/N3RP-logo-transparent.png";
+import nerpLogo from "./nerpLogo.png";
 
 export const Header = () => {
   return (
-    <header className={"justify-center items-center"}>
-      {/* <img src={logo} className="headerLogo" alt="logo" /> */}
-      N3RP - Create Contract - About - Connect Wallet
+    <header className={"justify-center items-center bg-slate-300 w-full"}>
+      <img src={nerpLogo} className="h-60 inline" alt="logo" />
+      Marketplace - Contract Office - <a href="">About</a> - Connect Wallet
     </header>
   );
 };
