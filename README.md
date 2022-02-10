@@ -1,6 +1,6 @@
 # N3RP • [![tests](https://github.com/gstenger98/N3RP/actions/workflows/tests.yml/badge.svg)](https://github.com/gstenger98/N3RP/actions/workflows/tests.yml)
 
-**N3RP** - An NFT Rental Protocol
+**N3RP** - An NFT Rental Protocol (pronounced "nerp")
 
 ***Not Production Ready Yet***
 
