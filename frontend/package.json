@@ -16,9 +16,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage": "jest --coverage",
-    "serve": "yarn build && cross-env NODE_ENV=production node --experimental-modules dist/server.js",
     "clean": "rimraf dist/",
-    "copy-files": "copyfiles static/* dist/assets && copyfiles index.html dist",
+    "copy-files": "copyfiles static/* dist/assets",
     "format": "prettier --write ."
   },
   "dependencies": {
