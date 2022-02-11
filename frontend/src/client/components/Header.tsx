@@ -1,5 +1,4 @@
 import React from "react";
-import { logo } from "../../../static/N3RP-logo-transparent.png";
 
 export const Header = () => {
   return (
