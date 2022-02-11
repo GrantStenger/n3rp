@@ -10,7 +10,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev:client": "vite --config vite.config.ts dev",
+    "dev": "vite --config vite.config.ts dev",
     "build": "tsc -p tsconfig.prod.json && yarn build:client && yarn copy-files",
     "build:client": "vite build --outDir dist",
     "test": "jest",
