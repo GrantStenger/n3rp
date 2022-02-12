@@ -34,7 +34,7 @@ yarn build will create the assets in `dist` - a `client` and `server` folder. Se
 
 `eslintrc.js` - a barebones eslint configuration for 2021, that extends off of the recommended ESLint config and prettier
 
-`.prettierrc.js` - the prettier config
+`.prettierrc` - the prettier config
 
 `index.html` - the vite entrypoint, that includes the entry point for the client
 
