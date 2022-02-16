@@ -100,6 +100,7 @@ Solidity and file structuring guidance:
 3. https://github.com/FrankieIsLost/RICKS
 4. https://github.com/m1guelpf/erc721-drop 
 5. https://github.com/FrankieIsLost/takeover 
+6. https://github.com/mazurylabs/mazury-frontend
 
 
 ## Questions

@@ -9,7 +9,7 @@ export const Navbar = () => {
       <div className="container flex flex-wrap justify-between items-center mx-auto">
         <div className="">
           <Link to="/">
-           <img src={nerpLogo} className="h-60 inline" alt="logo" />
+           <img src={nerpLogo} className="h-40 inline" alt="logo" />
           </Link>
         </div>
         <div className="flex">

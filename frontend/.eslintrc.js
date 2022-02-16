@@ -13,7 +13,7 @@ module.exports = {
     ecmaVersion: 12,
     sourceType: "module",
   },
-  plugins: ["jest", "react", "react-hooks", "@typescript-eslint"],
+  plugins: ["jest", "react", "react-hooks", "@typescript-eslint", "@tailwindcss/forms"],
   rules: {
     // note you must disable the base rule as it can report incorrect errors
     "no-use-before-define": "off",
