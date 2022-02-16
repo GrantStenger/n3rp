@@ -11,10 +11,10 @@ export const Navbar = () => {
         </div>
         <div className="flex">
           <div className="text-white hover:text-slate-100 font-bold py-2 px-4">
-            <a href="">Marketplace</a>
+            <a href="">Create</a>
           </div>
           <div className="text-white hover:text-slate-100 font-bold py-2 px-4">
-            <a href="">Create Contract</a>
+            <a href="">Find</a>
           </div>
           <div className="text-white hover:text-slate-100 font-bold py-2 pl-4 pr-10">
             <a href="https://github.com/gstenger98/N3RP/blob/master/README.md">About</a>
