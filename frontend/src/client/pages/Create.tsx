@@ -1,19 +1,20 @@
 import React from "react";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
+import { ContractCreator } from "../components/ContractCreator";
 import { useAppContext } from "../Context";
 
 
-const Main = () => {
+const Create = () => {
   const { name, setName } = useAppContext();
   
   return (
     <div className="flex bg-white-100 items-center flex-col justify-between h-screen">
       <Navbar />
-      <h1>Home Page</h1>
+      <ContractCreator />
       <Footer />
     </div>
   );
 };
 
-export default Main;
+export default Create;

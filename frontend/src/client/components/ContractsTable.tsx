@@ -37,7 +37,7 @@ const contracts = [
 ];
 
 
-export const UserContractsDisplay = () => {
+export const ContractsTable = () => {
     return (
         <div>
             <h1 className="font-bold text-slate-800 text-l lg:text-3xl text-center my-4">
