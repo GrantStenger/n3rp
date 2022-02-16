@@ -1,6 +1,7 @@
 import React from "react";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
+import { UserContractsDisplay } from "../components/UserContractsDisplay";
 import { useAppContext } from "../Context";
 
 
@@ -9,50 +10,10 @@ const Main = () => {
   return (
     <div className="flex bg-white-100 items-center flex-col justify-between h-screen">
       <Navbar />
-      <div className="flex items-center flex-col">
-        <h1 className="font-bold text-gray-900 text-l lg:text-7xl text-center">Create New Contract</h1>
-        <h2 className={"w-2/5 p-5 items-center flex align-middle text-center min-w-[320px]"} style={{ color: "green" }}>
-          Nerp
-        </h2>
-        <input
-          placeholder={"Enter your name"}
-          onChange={e => setName(e.currentTarget.value)}
-          style={{ background: "#8080802e" }}
-          className="focus:ring-indigo-500 focus:border-indigo-500 block w-full text-2xl border-gray-300 rounded-md p-2"
-        />
-      </div>
+      <UserContractsDisplay />
       <Footer />
     </div>
   );
 };
 
 export default Main;
-
-
-
-
-
-
-// const Main = () => {
-//   const { name, setName } = useAppContext();
-//   return (
-//     <div className="flex bg-white-100 items-center flex-col justify-between h-screen">
-//       <Navbar />
-//       <div className="flex items-center flex-col">
-//         <h1 className="font-bold text-gray-900 text-5xl lg:text-7xl text-center ">N3RP{name ? `, ${name}!` : ""}</h1>
-//         <h2 className={"w-2/5 p-5 items-center flex align-middle text-center min-w-[320px]"} style={{ color: "green" }}>
-//           This is a Vite React SSR Tailwind boilerplate!
-//         </h2>
-//         <input
-//           placeholder={"Enter your name"}
-//           onChange={e => setName(e.currentTarget.value)}
-//           style={{ background: "#8080802e" }}
-//           className="focus:ring-indigo-500 focus:border-indigo-500 block w-full text-2xl border-gray-300 rounded-md p-2"
-//         />
-//       </div>
-//       <Footer />
-//     </div>
-//   );
-// };
-
-// export default Main;
