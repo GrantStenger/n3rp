@@ -113,7 +113,7 @@ export const ContractsTable = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <a href="#">
-                                                    <button className="bg-slate-500 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-full">
+                                                    <button className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full">
                                                         Interact
                                                     </button>
                                                 </a>
