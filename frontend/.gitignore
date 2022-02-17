@@ -38,5 +38,5 @@ Thumbs.db
 dist/**/*
 
 # Ignore .yarn cache and releases
-.yarn
-.vercel
+# .yarn
+# .vercel
