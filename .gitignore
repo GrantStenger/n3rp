@@ -2,4 +2,8 @@ cache/
 out/
 .DS_Store
 privateNotes.md
+<<<<<<< HEAD
+.vercel
+=======
 .idea
+>>>>>>> origin/master
