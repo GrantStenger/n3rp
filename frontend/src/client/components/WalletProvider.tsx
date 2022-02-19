@@ -39,7 +39,7 @@ const connectors = ({ chainId } : { chainId?: number }) => {
 }
 
 const WalletProvider : FC = ({ children }) => (
-  <Provider autoConnect={false} connectors={connectors}>
+  <Provider autoConnect={true} connectors={connectors}>
     {children}
   </Provider>
 );
