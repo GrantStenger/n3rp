@@ -1,21 +1,25 @@
 import React from "react";
-import Main from "./pages/Main";
-import Create from "./pages/Create";
-import Find from "./pages/Find";
-import { ContextWrapper } from "./Context";
 import {
   Routes,
   Route
 } from "react-router-dom";
 
+import WalletProvider from "./components/WalletProvider";
+import Main from "./pages/Main";
+import Create from "./pages/Create";
+import Find from "./pages/Find";
+import { ContextWrapper } from "./Context";
+
 export const App = () => {
   return (
     <ContextWrapper>
-      <Routes>
-        <Route path="/" element={<Main />} />
-        <Route path="/create" element={<Create />} />
-        <Route path="/find" element={<Find />} />
-      </Routes>
+      <WalletProvider>
+        <Routes>
+          <Route path="/" element={<Main />} />
+          <Route path="/create" element={<Create />} />
+          <Route path="/find" element={<Find />} />
+        </Routes>
+      </WalletProvider>
     </ContextWrapper>
   );
 };
