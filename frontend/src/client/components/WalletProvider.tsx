@@ -6,7 +6,9 @@ import { WalletLinkConnector } from 'wagmi/connectors/walletLink'
 
 // API key for Ethereum node
 // Two popular services are Infura (infura.io) and Alchemy (alchemy.com)
-const infuraId = process.env.INFURA_ID
+// const alchemyRpcUrl = `https://eth-mainnet.alchemyapi.io/v2/pnRdKJDm5jVbqFYTFMMH2oC_9hdUHMxR`;
+
+const infuraId = process.env.INFURA_ID;
 
 // Chains for connectors to support
 const chains = defaultChains
@@ -19,7 +21,9 @@ const connectors = ({ chainId } : { chainId?: number }) => {
     // Injected (metamask, etc)
     new InjectedConnector({
       chains,
-      options: { shimDisconnect: true },
+      options: {
+        shimDisconnect: true,
+      },
     }),
     // WalletConnect (rainbow, etc.)
     new WalletConnectConnector({

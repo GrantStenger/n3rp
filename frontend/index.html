@@ -13,13 +13,13 @@
     <script type="module" src="/src/client/entry-client.tsx"></script>
     <script>window.global = window;</script>
     <script type="module">
-        import { Buffer } from "buffer/"; // <-- no typo here ("/")
-        import process from "process";
-        import EventEmitter from "events";
-            
-        window.Buffer = Buffer;
-        window.process = process;
-        window.EventEmitter = EventEmitter;
+      import { Buffer } from "buffer/"; // <-- no typo here ("/")
+      import process from "process";
+      import EventEmitter from "events";
+          
+      window.Buffer = Buffer;
+      window.process = process;
+      window.EventEmitter = EventEmitter;
     </script>
   </body>
 </html>
