@@ -8,3 +8,22 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+._buttonBasic {
+  @apply rounded-md px-12 py-4 font-bold hover:bg-slate-50;
+}
+
+._button {
+  @apply bg-slate-200 rounded-md px-12 py-4 font-bold hover:bg-slate-300;
+}
+._button._selected {
+  @apply bg-slate-700 text-white;
+}
+._button:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+._card {
+  @apply p-4 border-2 border-slate-300 rounded-lg;
+}
