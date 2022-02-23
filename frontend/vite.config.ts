@@ -16,7 +16,7 @@ export default defineConfig({
     rollupOptions: {
       // @ts-ignore
       plugins: [
-        builtinsPlugin
+        // builtinsPlugin
       ],
     },
   },
