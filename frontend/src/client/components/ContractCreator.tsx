@@ -1,17 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAccount, useConnect } from "wagmi";
-import { Formik, Field, useFormikContext } from 'formik';
+import { Formik, Field, useFormikContext, FieldAttributes } from 'formik';
 import { getNFTs, getNFTMetadata } from "../lib/web3";
-import { GetNftMetadataResponse } from "@alch/alchemy-web3";
+import { GetNftMetadataResponse, GetNftsResponse } from "@alch/alchemy-web3";
 import Spinner from "./Spinner";
 
 import { erc721ABI, useContractRead } from "wagmi";
-import ethers from "ethers";
 
 type Mode = ("LEND" | "BORROW") | null;
 
+/**
+ * Load NFTs owned by a wallet address.
+ * TODO: pagination
+ */
 const useNFTs = (ownerAddr?: string) => {
-  const [nfts, setNFTs] = useState<null | any>(null);
+  const [nfts, setNFTs] = useState<null | GetNftsResponse>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -27,16 +30,19 @@ const useNFTs = (ownerAddr?: string) => {
   return [nfts, loading];
 }
 
+/**
+ * Formik `Field` with N3RP's default styling.
+ */
 const Input = ({
   type = 'text',
   label,
   name,
   ...props
-} : {
+} : FieldAttributes<{
   type: string,
   label: string,
   name: string,
-}) => {
+}>) => {
   return (
     <div className="relative z-0 mb-6 w-full group">
       <Field
@@ -55,10 +61,11 @@ const Input = ({
   )
 }
 
-type NFTMetadata = GetNftMetadataResponse & {
-  owner: string;
-}
+type NFTMetadata = GetNftMetadataResponse & { owner: string }
 
+/**
+ * Show an NFT using metadata.
+ */
 const NFTDisplay = ({ metadata }: { metadata: NFTMetadata }) => {
   const img = metadata?.media && metadata.media.length > 0 
     ? metadata.media[0].uri?.gateway 
@@ -69,7 +76,11 @@ const NFTDisplay = ({ metadata }: { metadata: NFTMetadata }) => {
       <div className="flex-1 space-y-2">
         <div>
           <h1 className="text-lg font-bold">{metadata.title}</h1>
-          <div className="text-sm">Owned by <a href={`https://etherscan.io/address/${metadata.owner}`} target="_blank" rel="noreferrer" className="text-blue-500">{metadata.owner.substring(0,6)}</a></div>
+          {metadata.owner && (
+            <div className="text-sm">
+              Owned by <a href={`https://etherscan.io/address/${metadata.owner}`} target="_blank" rel="noreferrer" className="text-blue-500">{metadata.owner.substring(0,6)}</a>
+            </div>
+          )}
         </div>
         {metadata.metadata?.attributes?.map(attribute => (
           <div key={attribute.trait_type} className="inline-block bg-slate-100 px-2 py-1 rounded-xl text-xs mr-2 mb-2 max-w-full">
@@ -140,7 +151,7 @@ const SelectNFTByAddress = () => {
   return values._metadata ? (
     <>
       <NFTDisplay
-        metadata={values._metadata as GetNftMetadataResponse}
+        metadata={values._metadata as NFTMetadata}
       />
       {!values.nftConfirmed ? (
         <div className="space-x-2">
@@ -205,7 +216,9 @@ export const ContractCreator = () => {
             {accountData ? (  
               <>
                 <div>
-                  {accountData.ens && <img src={accountData.ens?.avatar!} alt="ENS Avatar" />}
+                  {accountData.ens?.avatar ? (
+                    <img src={accountData.ens.avatar} alt="ENS Avatar" />
+                  ) : null}
                   <div>Connected to <span className="font-bold">{accountData.connector?.name}</span></div>
                   <div>
                     {accountData.ens?.name
@@ -265,7 +278,7 @@ export const ContractCreator = () => {
               </div>
               {f.values.nftConfirmed === true ? (
                 <div className="_card max-w-120 space-y-4">
-                  
+                  Form here
                 </div>
               ) : null}
             </>

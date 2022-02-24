@@ -1,13 +1,9 @@
 import { defineConfig } from "vite";
 import reactRefresh from "@vitejs/plugin-react-refresh";
-
 import builtins from 'rollup-plugin-node-builtins';
 
-const builtinsPlugin = builtins({
-  crypto: true,
-});
+const builtinsPlugin = builtins({ crypto: true });
 builtinsPlugin.name = 'builtins';
-
 
 export default defineConfig({
   plugins: [reactRefresh()],
@@ -15,14 +11,11 @@ export default defineConfig({
     minify: true,
     rollupOptions: {
       // @ts-ignore
-      plugins: [
-        // builtinsPlugin
-      ],
+      plugins: [],
     },
   },
   define: {
     'process.env': {},
-    // 'global': {},
   },
   resolve: {
     alias: {
