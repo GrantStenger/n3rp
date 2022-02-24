@@ -3,12 +3,16 @@ import { Provider, chain, defaultChains } from "wagmi";
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 import { WalletLinkConnector } from 'wagmi/connectors/walletLink'
+import { providers } from 'ethers'
+import { Networkish } from "@ethersproject/networks";
 
 // API key for Ethereum node
 // Two popular services are Infura (infura.io) and Alchemy (alchemy.com)
-// const alchemyRpcUrl = `https://eth-mainnet.alchemyapi.io/v2/pnRdKJDm5jVbqFYTFMMH2oC_9hdUHMxR`;
-
+const ALCHEMY_API_KEY = `pnRdKJDm5jVbqFYTFMMH2oC_9hdUHMxR`;
 const infuraId = process.env.INFURA_ID;
+
+const provider = ({ chainId } : { chainId?: Networkish }) => 
+  new providers.AlchemyProvider(chainId, ALCHEMY_API_KEY);
 
 // Chains for connectors to support
 const chains = defaultChains
@@ -43,7 +47,7 @@ const connectors = ({ chainId } : { chainId?: number }) => {
 }
 
 const WalletProvider : FC = ({ children }) => (
-  <Provider autoConnect={true} connectors={connectors}>
+  <Provider autoConnect={true} connectors={connectors} provider={provider}>
     {children}
   </Provider>
 );
