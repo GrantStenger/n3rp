@@ -2,7 +2,7 @@
 
 **N3RP** - An NFT Rental Protocol (pronounced "nerp")
 
-***Not Production Ready Yet***
+***Smart Contracts Passing Tests, Frontend Functional But Is Being Beautified.*** 🛠
 
 
 ## Introduction
@@ -142,7 +142,7 @@ Solidity and file structuring guidance:
 
 
 ## To Do's:
-1. Write tests
+1. Write tests (done)
 2. Answer all of the above questions
 3. Deploy to EVM
 4. Add renew lease functionality
