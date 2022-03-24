@@ -154,7 +154,7 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // Eth should be deposited
-        assert(rental.ethIsDeposited() == true);
+        assertTrue(rental.ethIsDeposited());
         assertFalse(rental.nftIsDeposited());
         assert(rental.rentalStartTime() == 0);
         assert(rental.collectedCollateral() == 0);
@@ -166,8 +166,8 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // The rental should now begin!
-        assert(rental.ethIsDeposited() == true);
-        assert(rental.nftIsDeposited() == true);
+        assertTrue(rental.ethIsDeposited());
+        assertTrue(rental.nftIsDeposited());
 
         assert(mockNft.ownerOf(tokenId) == borrowerAddress);
         assert(lenderAddress.balance == rentalPayment);
@@ -202,7 +202,7 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // The rental should not have began since the lender hasn't deposited the nft
-        assert(rental.ethIsDeposited() == true);
+        assertTrue(rental.ethIsDeposited());
         assertFalse(rental.nftIsDeposited());
         assert(rental.rentalStartTime() == 0);
 
@@ -226,7 +226,7 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // The nft should be deposited
-        assert(rental.nftIsDeposited() == true);
+        assertTrue(rental.nftIsDeposited());
 
         // Set the lender's balance to 0 to realize the eth transferred from the contract
         vm.deal(lenderAddress, 0);
@@ -237,8 +237,8 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // The rental should now begin!
-        assert(rental.ethIsDeposited() == true);
-        assert(rental.nftIsDeposited() == true);
+        assertTrue(rental.ethIsDeposited());
+        assertTrue(rental.nftIsDeposited());
 
         assert(mockNft.ownerOf(tokenId) == borrowerAddress);
         assert(lenderAddress.balance == rentalPayment);
