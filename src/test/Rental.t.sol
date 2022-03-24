@@ -121,7 +121,7 @@ contract RentalTest is DSTestPlus {
         rental.depositNft();
 
         // Rental should not have any eth deposited at this point
-        assert(rental.ethIsDeposited() == false);
+        assertFalse(rental.ethIsDeposited());
 
         // The Lender Can Deposit
         startHoax(lenderAddress);
@@ -145,8 +145,8 @@ contract RentalTest is DSTestPlus {
     /// @notice Tests depositing the NFT into the contract after the borrower deposits eth
     function testDepositETHthenNFT() public {
         // Rental should not have any eth or nft deposited at this point
-        assert(rental.ethIsDeposited() == false);
-        assert(rental.nftIsDeposited() == false);
+        assertFalse(rental.ethIsDeposited());
+        assertFalse(rental.nftIsDeposited());
 
         // The Borrower can deposit eth
         startHoax(borrowerAddress);
@@ -155,7 +155,7 @@ contract RentalTest is DSTestPlus {
 
         // Eth should be deposited
         assert(rental.ethIsDeposited() == true);
-        assert(rental.nftIsDeposited() == false);
+        assertFalse(rental.nftIsDeposited());
         assert(rental.rentalStartTime() == 0);
         assert(rental.collectedCollateral() == 0);
 
@@ -194,7 +194,7 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // Rental should not have any eth deposited at this point
-        assert(rental.ethIsDeposited() == false);
+        assertFalse(rental.ethIsDeposited());
 
         // The Borrower can deposit eth
         startHoax(borrowerAddress);
@@ -203,7 +203,7 @@ contract RentalTest is DSTestPlus {
 
         // The rental should not have began since the lender hasn't deposited the nft
         assert(rental.ethIsDeposited() == true);
-        assert(rental.nftIsDeposited() == false);
+        assertFalse(rental.nftIsDeposited());
         assert(rental.rentalStartTime() == 0);
 
         // We can't redeposit
@@ -216,8 +216,8 @@ contract RentalTest is DSTestPlus {
     /// @notice Tests depositing ETH into the Rental Contract after the NFT is deposited
     function testDepositNFTandETH() public {
         // Rental should not have any eth or nft deposited at this point
-        assert(rental.ethIsDeposited() == false);
-        assert(rental.nftIsDeposited() == false);
+        assertFalse(rental.ethIsDeposited());
+        assertFalse(rental.nftIsDeposited());
 
         // The Lender Can Deposit
         startHoax(lenderAddress);
