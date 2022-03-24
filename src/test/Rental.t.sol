@@ -464,15 +464,13 @@ contract RentalTest is DSTestPlus {
     function testWithdrawCollateralNoLender() public {
         uint256 fullPayment = rentalPayment + collateral;
         // The Borrower deposits
-        startHoax(borrowerAddress, fullPayment);
+        hoax(borrowerAddress, fullPayment);
         rental.depositEth{value: fullPayment}();
-        vm.stopPrank();
 
         // Can't withdraw collateral before the dueDate
-        startHoax(lenderAddress, 0);
+        hoax(lenderAddress, 0);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
         rental.withdrawCollateral();
-        vm.stopPrank();
 
         // Jump to after the collateral payout period
         vm.warp(dueDate + collateralPayoutPeriod);
@@ -482,9 +480,8 @@ contract RentalTest is DSTestPlus {
         vm.deal(borrowerAddress, 0);
     
         // The borrower can withdraw the full contract balance
-        startHoax(borrowerAddress, 0);
+        hoax(borrowerAddress, 0);
         rental.withdrawCollateral();
-        assert(borrowerAddress.balance == fullPayment);
-        vm.stopPrank();
+        assertEq(borrowerAddress.balance, fullPayment);
     }
 }
