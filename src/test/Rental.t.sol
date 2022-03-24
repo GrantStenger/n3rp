@@ -149,9 +149,8 @@ contract RentalTest is DSTestPlus {
         assertFalse(rental.nftIsDeposited());
 
         // The Borrower can deposit eth
-        startHoax(borrowerAddress);
+        hoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
-        vm.stopPrank();
 
         // Eth should be deposited
         assertTrue(rental.ethIsDeposited());
@@ -169,10 +168,10 @@ contract RentalTest is DSTestPlus {
         assertTrue(rental.ethIsDeposited());
         assertTrue(rental.nftIsDeposited());
 
-        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
-        assert(lenderAddress.balance == rentalPayment);
+        assertEq(mockNft.ownerOf(tokenId), borrowerAddress);
+        assertEq(lenderAddress.balance, rentalPayment);
 
-        assert(rental.rentalStartTime() == block.timestamp);
+        assertEq(rental.rentalStartTime(), block.timestamp);
     }
 
     /// -------------------------------------------- ///
