@@ -181,24 +181,21 @@ contract RentalTest is DSTestPlus {
     /// @notice Tests depositing ETH into the Rental Contract
     function testDepositETH() public {
         // Expect Revert when we don't send from the borrower address
-        startHoax(address(1));
+        hoax(address(1));
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
         rental.depositEth();
-        vm.stopPrank();
 
         // Expect Revert if not enough eth is sent as a value
-        startHoax(borrowerAddress);
+        hoax(borrowerAddress);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InsufficientValue()"))));
         rental.depositEth();
-        vm.stopPrank();
 
         // Rental should not have any eth deposited at this point
         assertFalse(rental.ethIsDeposited());
 
         // The Borrower can deposit eth
-        startHoax(borrowerAddress);
+        hoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
-        vm.stopPrank();
 
         // The rental should not have began since the lender hasn't deposited the nft
         assertTrue(rental.ethIsDeposited());
@@ -206,10 +203,9 @@ contract RentalTest is DSTestPlus {
         assertEq(rental.rentalStartTime(), 0);
 
         // We can't redeposit
-        startHoax(borrowerAddress);
+        hoax(borrowerAddress);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("AlreadyDeposited()"))));
         rental.depositEth();
-        vm.stopPrank();
     }
 
     /// @notice Tests depositing ETH into the Rental Contract after the NFT is deposited
