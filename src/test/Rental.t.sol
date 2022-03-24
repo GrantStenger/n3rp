@@ -433,18 +433,16 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // The Borrower deposits
-        startHoax(borrowerAddress);
+        hoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
-        vm.stopPrank();
 
         // Can't withdraw collateral before the dueDate
-        startHoax(lenderAddress, 0);
+        hoax(lenderAddress, 0);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
         rental.withdrawCollateral();
-        vm.stopPrank();
 
         // The borrower should own the NFT now
-        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
+        assertEq(mockNft.ownerOf(tokenId), borrowerAddress);
 
         // Jump to after the collateral payout period
         vm.warp(dueDate + collateralPayoutPeriod);
@@ -457,8 +455,8 @@ contract RentalTest is DSTestPlus {
         startHoax(lenderAddress, 0);
         rental.withdrawCollateral();
         assertEq(borrowerAddress.balance, 0);
-        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
-        assert(lenderAddress.balance == collateral);
+        assertEq(mockNft.ownerOf(tokenId), borrowerAddress);
+        assertEq(lenderAddress.balance, collateral);
         vm.stopPrank();
     }
 
