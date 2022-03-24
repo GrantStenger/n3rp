@@ -321,32 +321,28 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // The Borrower deposits
-        startHoax(borrowerAddress);
+        hoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
-        vm.stopPrank();
-
 
         // A non-owner of the erc721 token id shouldn't be able to transfer
-        startHoax(address(1));
+        hoax(address(1));
         vm.expectRevert("WRONG_FROM");
         rental.returnNft();
-        vm.stopPrank();
 
         // Can't transfer without approval
-        startHoax(borrowerAddress);
+        hoax(borrowerAddress);
         vm.expectRevert("NOT_AUTHORIZED");
         rental.returnNft();
-        vm.stopPrank();
 
         // The borrower should own the NFT now
-        assert(mockNft.ownerOf(tokenId) == borrowerAddress);
+        assertEq(mockNft.ownerOf(tokenId), borrowerAddress);
     
         // The owner should be able to return to the lender
         startHoax(borrowerAddress, 0);
         mockNft.approve(address(rental), tokenId);
         rental.returnNft();
-        assert(borrowerAddress.balance == collateral);
-        assert(mockNft.ownerOf(tokenId) == lenderAddress);
+        assertEq(borrowerAddress.balance, collateral);
+        assertEq(mockNft.ownerOf(tokenId), lenderAddress);
         vm.stopPrank();
     }
 
