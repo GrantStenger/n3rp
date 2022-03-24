@@ -58,7 +58,7 @@ contract RentalTest is DSTestPlus {
     /// @notice Test Rental Construction
     function testConstructor() public {
         // Expect Revert when we don't own the token id
-        startHoax(address(1), address(1), type(uint256).max);
+        startHoax(address(1));
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("NonTokenOwner()"))));
         rental = new Rental(
             address(1),
@@ -76,7 +76,7 @@ contract RentalTest is DSTestPlus {
         // Expect Revert if the borrow doesn't have enough balance
         address lender = address(1);
         address borrower = address(2);
-        startHoax(lender, lender, type(uint256).max);
+        startHoax(lender);
         mockNft.mint(lender, tokenId+1);
         vm.deal(borrower, rentalPayment + collateral - 1);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InsufficientValue()"))));
@@ -101,25 +101,25 @@ contract RentalTest is DSTestPlus {
     /// @notice Tests depositing an NFT into the Rental Contract
     function testDepositNFT() public {
         // Expect Revert when we don't send from the lender address
-        startHoax(address(1), address(1), type(uint256).max);
+        startHoax(address(1));
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
         rental.depositNft();
         vm.stopPrank();
 
         // Expect Revert if the lender doesn't own the token
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         mockNft.transferFrom(lenderAddress, address(1), tokenId);
         vm.expectRevert("WRONG_FROM");
         rental.depositNft();
         vm.stopPrank();
 
         // Transfer the token back to the lender
-        startHoax(address(1), address(1), type(uint256).max);
+        startHoax(address(1));
         mockNft.transferFrom(address(1), lenderAddress, tokenId);
         vm.stopPrank();
 
         // The Rental can't transfer if we don't approve it
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         vm.expectRevert("NOT_AUTHORIZED");
         rental.depositNft();
         vm.stopPrank();
@@ -128,7 +128,7 @@ contract RentalTest is DSTestPlus {
         assert(rental.ethIsDeposited() == false);
 
         // The Lender Can Deposit
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         mockNft.approve(address(rental), tokenId);
         rental.depositNft();
         vm.stopPrank();
@@ -139,10 +139,10 @@ contract RentalTest is DSTestPlus {
         assert(rental.collectedCollateral() == 0);
 
         // We can't redeposit now even if we get the token back somehow
-        startHoax(address(rental), address(rental), type(uint256).max);
+        startHoax(address(rental));
         mockNft.transferFrom(address(rental), lenderAddress, tokenId);
         vm.stopPrank();
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("AlreadyDeposited()"))));
         rental.depositNft();
         vm.stopPrank();
@@ -155,7 +155,7 @@ contract RentalTest is DSTestPlus {
         assert(rental.nftIsDeposited() == false);
 
         // The Borrower can deposit eth
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
         vm.stopPrank();
 
@@ -166,7 +166,7 @@ contract RentalTest is DSTestPlus {
         assert(rental.collectedCollateral() == 0);
 
         // The Lender Can Deposit
-        startHoax(lenderAddress, lenderAddress, 0);
+        startHoax(lenderAddress, 0);
         mockNft.approve(address(rental), tokenId);
         rental.depositNft();
         vm.stopPrank();
@@ -188,13 +188,13 @@ contract RentalTest is DSTestPlus {
     /// @notice Tests depositing ETH into the Rental Contract
     function testDepositETH() public {
         // Expect Revert when we don't send from the borrower address
-        startHoax(address(1), address(1), type(uint256).max);
+        startHoax(address(1));
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
         rental.depositEth();
         vm.stopPrank();
 
         // Expect Revert if not enough eth is sent as a value
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InsufficientValue()"))));
         rental.depositEth();
         vm.stopPrank();
@@ -203,7 +203,7 @@ contract RentalTest is DSTestPlus {
         assert(rental.ethIsDeposited() == false);
 
         // The Borrower can deposit eth
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
         vm.stopPrank();
 
@@ -213,7 +213,7 @@ contract RentalTest is DSTestPlus {
         assert(rental.rentalStartTime() == 0);
 
         // We can't redeposit
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("AlreadyDeposited()"))));
         rental.depositEth();
         vm.stopPrank();
@@ -226,7 +226,7 @@ contract RentalTest is DSTestPlus {
         assert(rental.nftIsDeposited() == false);
 
         // The Lender Can Deposit
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         mockNft.approve(address(rental), tokenId);
         rental.depositNft();
         vm.stopPrank();
@@ -238,7 +238,7 @@ contract RentalTest is DSTestPlus {
         vm.deal(lenderAddress, 0);
 
         // The Borrower can deposit eth
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
         vm.stopPrank();
 
@@ -261,19 +261,19 @@ contract RentalTest is DSTestPlus {
         uint256 fullPayment = rentalPayment + collateral;
 
         // Can't withdraw if the nft hasn't been deposited
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
         rental.withdrawNft();
         vm.stopPrank();
 
         // The Lender deposits
-        startHoax(lenderAddress, lenderAddress, fullPayment);
+        startHoax(lenderAddress, fullPayment);
         mockNft.approve(address(rental), tokenId);
         rental.depositNft();
         vm.stopPrank();
 
         // Can't withdraw if not the lender
-        startHoax(address(1), address(1), type(uint256).max);
+        startHoax(address(1));
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
         rental.withdrawNft();
         vm.stopPrank();
@@ -282,7 +282,7 @@ contract RentalTest is DSTestPlus {
         assert(mockNft.ownerOf(tokenId) == address(rental));
     
         // The lender can withdraw the NFT
-        startHoax(lenderAddress, lenderAddress, 0);
+        startHoax(lenderAddress, 0);
         rental.withdrawNft();
         vm.stopPrank();
 
@@ -299,18 +299,18 @@ contract RentalTest is DSTestPlus {
         uint256 fullPayment = rentalPayment + collateral;
 
         // Can't withdraw if the eth hasn't been deposited
-        startHoax(borrowerAddress, borrowerAddress, fullPayment);
+        startHoax(borrowerAddress, fullPayment);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
         rental.withdrawEth();
         vm.stopPrank();
 
         // The Borrower deposits
-        startHoax(borrowerAddress, borrowerAddress, fullPayment);
+        startHoax(borrowerAddress, fullPayment);
         rental.depositEth{value: fullPayment}();
         vm.stopPrank();
 
         // Can't withdraw if not the borrower
-        startHoax(address(1), address(1), type(uint256).max);
+        startHoax(address(1));
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
         rental.withdrawEth();
         vm.stopPrank();
@@ -319,7 +319,7 @@ contract RentalTest is DSTestPlus {
         vm.deal(borrowerAddress, 0);
     
         // The borrower can withdraw the full contract balance
-        startHoax(borrowerAddress, borrowerAddress, 0);
+        startHoax(borrowerAddress, 0);
         rental.withdrawEth();
         vm.stopPrank();
 
@@ -334,25 +334,25 @@ contract RentalTest is DSTestPlus {
     /// @notice Tests returning the NFT on time
     function testReturnNFT() public {
         // The Lender deposits
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         mockNft.approve(address(rental), tokenId);
         rental.depositNft();
         vm.stopPrank();
 
         // The Borrower deposits
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
         vm.stopPrank();
 
 
         // A non-owner of the erc721 token id shouldn't be able to transfer
-        startHoax(address(1), address(1), type(uint256).max);
+        startHoax(address(1));
         vm.expectRevert("WRONG_FROM");
         rental.returnNft();
         vm.stopPrank();
 
         // Can't transfer without approval
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         vm.expectRevert("NOT_AUTHORIZED");
         rental.returnNft();
         vm.stopPrank();
@@ -361,7 +361,7 @@ contract RentalTest is DSTestPlus {
         assert(mockNft.ownerOf(tokenId) == borrowerAddress);
     
         // The owner should be able to return to the lender
-        startHoax(borrowerAddress, borrowerAddress, 0);
+        startHoax(borrowerAddress, 0);
         mockNft.approve(address(rental), tokenId);
         rental.returnNft();
         assert(borrowerAddress.balance == collateral);
@@ -372,24 +372,24 @@ contract RentalTest is DSTestPlus {
     /// @notice Tests returning the NFT late
     function testReturnNFTLate() public {
         // The Lender deposits
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         mockNft.approve(address(rental), tokenId);
         rental.depositNft();
         vm.stopPrank();
 
         // The Borrower deposits
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
         vm.stopPrank();
 
         // A non-owner of the erc721 token id shouldn't be able to transfer
-        startHoax(address(1), address(1), type(uint256).max);
+        startHoax(address(1));
         vm.expectRevert("WRONG_FROM");
         rental.returnNft();
         vm.stopPrank();
 
         // Can't transfer without approval
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         vm.expectRevert("NOT_AUTHORIZED");
         rental.returnNft();
         vm.stopPrank();
@@ -404,7 +404,7 @@ contract RentalTest is DSTestPlus {
         vm.deal(lenderAddress, 0);
 
         // The owner should be able to return to the lender with a decreased collateral return
-        startHoax(borrowerAddress, borrowerAddress, 0);
+        startHoax(borrowerAddress, 0);
         mockNft.approve(address(rental), tokenId);
         rental.returnNft();
         assert(borrowerAddress.balance == collateral / 2);
@@ -416,13 +416,13 @@ contract RentalTest is DSTestPlus {
     /// @notice Tests unable to return NFT since past collateral payout period
     function testReturnNFTFail() public {
         // The Lender deposits
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         mockNft.approve(address(rental), tokenId);
         rental.depositNft();
         vm.stopPrank();
 
         // The Borrower deposits
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
         vm.stopPrank();
 
@@ -437,7 +437,7 @@ contract RentalTest is DSTestPlus {
     
         // The borrower can't return the nft now that it's past the payout period
         // Realistically, this wouldn't be called by the borrower since it just transfers the NFT back to the lender
-        startHoax(borrowerAddress, borrowerAddress, 0);
+        startHoax(borrowerAddress, 0);
         mockNft.approve(address(rental), tokenId);
         rental.returnNft();
         assert(borrowerAddress.balance == 0);
@@ -453,18 +453,18 @@ contract RentalTest is DSTestPlus {
     /// @notice Test withdrawing collateral
     function testWithdrawCollateral() public {
         // The Lender deposits
-        startHoax(lenderAddress, lenderAddress, type(uint256).max);
+        startHoax(lenderAddress);
         mockNft.approve(address(rental), tokenId);
         rental.depositNft();
         vm.stopPrank();
 
         // The Borrower deposits
-        startHoax(borrowerAddress, borrowerAddress, type(uint256).max);
+        startHoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
         vm.stopPrank();
 
         // Can't withdraw collateral before the dueDate
-        startHoax(lenderAddress, lenderAddress, 0);
+        startHoax(lenderAddress, 0);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
         rental.withdrawCollateral();
         vm.stopPrank();
@@ -480,7 +480,7 @@ contract RentalTest is DSTestPlus {
         vm.deal(borrowerAddress, 0);
     
         // The lender can withdraw the collateral
-        startHoax(lenderAddress, lenderAddress, 0);
+        startHoax(lenderAddress, 0);
         rental.withdrawCollateral();
         assert(borrowerAddress.balance == 0);
         assert(mockNft.ownerOf(tokenId) == borrowerAddress);
@@ -492,12 +492,12 @@ contract RentalTest is DSTestPlus {
     function testWithdrawCollateralNoLender() public {
         uint256 fullPayment = rentalPayment + collateral;
         // The Borrower deposits
-        startHoax(borrowerAddress, borrowerAddress, fullPayment);
+        startHoax(borrowerAddress, fullPayment);
         rental.depositEth{value: fullPayment}();
         vm.stopPrank();
 
         // Can't withdraw collateral before the dueDate
-        startHoax(lenderAddress, lenderAddress, 0);
+        startHoax(lenderAddress, 0);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
         rental.withdrawCollateral();
         vm.stopPrank();
@@ -510,7 +510,7 @@ contract RentalTest is DSTestPlus {
         vm.deal(borrowerAddress, 0);
     
         // The borrower can withdraw the full contract balance
-        startHoax(borrowerAddress, borrowerAddress, 0);
+        startHoax(borrowerAddress, 0);
         rental.withdrawCollateral();
         assert(borrowerAddress.balance == fullPayment);
         vm.stopPrank();
