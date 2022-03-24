@@ -156,8 +156,8 @@ contract RentalTest is DSTestPlus {
         // Eth should be deposited
         assertTrue(rental.ethIsDeposited());
         assertFalse(rental.nftIsDeposited());
-        assert(rental.rentalStartTime() == 0);
-        assert(rental.collectedCollateral() == 0);
+        assertEq(rental.rentalStartTime(), 0);
+        assertEq(rental.collectedCollateral(), 0);
 
         // The Lender Can Deposit
         startHoax(lenderAddress, 0);
@@ -204,7 +204,7 @@ contract RentalTest is DSTestPlus {
         // The rental should not have began since the lender hasn't deposited the nft
         assertTrue(rental.ethIsDeposited());
         assertFalse(rental.nftIsDeposited());
-        assert(rental.rentalStartTime() == 0);
+        assertEq(rental.rentalStartTime(), 0);
 
         // We can't redeposit
         startHoax(borrowerAddress);
@@ -434,7 +434,7 @@ contract RentalTest is DSTestPlus {
         startHoax(borrowerAddress, 0);
         mockNft.approve(address(rental), tokenId);
         rental.returnNft();
-        assert(borrowerAddress.balance == 0);
+        assertEq(borrowerAddress.balance, 0);
         assert(mockNft.ownerOf(tokenId) == lenderAddress);
         assert(lenderAddress.balance == collateral);
         vm.stopPrank();
@@ -476,7 +476,7 @@ contract RentalTest is DSTestPlus {
         // The lender can withdraw the collateral
         startHoax(lenderAddress, 0);
         rental.withdrawCollateral();
-        assert(borrowerAddress.balance == 0);
+        assertEq(borrowerAddress.balance, 0);
         assert(mockNft.ownerOf(tokenId) == borrowerAddress);
         assert(lenderAddress.balance == collateral);
         vm.stopPrank();
