@@ -15,4 +15,8 @@ contract DSTestPlus is DSTest, stdCheats {
     function assertERC20Eq(ERC20 erc1, ERC20 erc2) internal {
         assertEq(address(erc1), address(erc2));
     }
+
+    function assertFalse(bool data) internal {
+        assertTrue(!data);
+    }
 }
