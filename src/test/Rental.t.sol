@@ -284,32 +284,28 @@ contract RentalTest is DSTestPlus {
         uint256 fullPayment = rentalPayment + collateral;
 
         // Can't withdraw if the eth hasn't been deposited
-        startHoax(borrowerAddress, fullPayment);
+        hoax(borrowerAddress, fullPayment);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
         rental.withdrawEth();
-        vm.stopPrank();
 
         // The Borrower deposits
-        startHoax(borrowerAddress, fullPayment);
+        hoax(borrowerAddress, fullPayment);
         rental.depositEth{value: fullPayment}();
-        vm.stopPrank();
 
         // Can't withdraw if not the borrower
-        startHoax(address(1));
+        hoax(address(1));
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
         rental.withdrawEth();
-        vm.stopPrank();
 
         // Set both to have no eth
         vm.deal(borrowerAddress, 0);
     
         // The borrower can withdraw the full contract balance
-        startHoax(borrowerAddress, 0);
+        hoax(borrowerAddress, 0);
         rental.withdrawEth();
-        vm.stopPrank();
 
         // The borrower should have their full deposit returned
-        assert(borrowerAddress.balance == fullPayment);
+        assertEq(borrowerAddress.balance, fullPayment);
     }
 
     /// -------------------------------------------- ///
