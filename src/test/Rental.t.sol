@@ -249,10 +249,9 @@ contract RentalTest is DSTestPlus {
         uint256 fullPayment = rentalPayment + collateral;
 
         // Can't withdraw if the nft hasn't been deposited
-        startHoax(lenderAddress);
+        hoax(lenderAddress);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InvalidState()"))));
         rental.withdrawNft();
-        vm.stopPrank();
 
         // The Lender deposits
         startHoax(lenderAddress, fullPayment);
@@ -261,21 +260,19 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // Can't withdraw if not the lender
-        startHoax(address(1));
+        hoax(address(1));
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("Unauthorized()"))));
         rental.withdrawNft();
-        vm.stopPrank();
 
         // The Lender doesn't own the NFT here
-        assert(mockNft.ownerOf(tokenId) == address(rental));
+        assertEq(mockNft.ownerOf(tokenId), address(rental));
     
         // The lender can withdraw the NFT
-        startHoax(lenderAddress, 0);
+        hoax(lenderAddress, 0);
         rental.withdrawNft();
-        vm.stopPrank();
 
         // The Lender should now own the Token
-        assert(mockNft.ownerOf(tokenId) == lenderAddress);
+        assertEq(mockNft.ownerOf(tokenId), lenderAddress);
     }
 
     /// -------------------------------------------- ///
