@@ -58,7 +58,7 @@ contract RentalTest is DSTestPlus {
     /// @notice Test Rental Construction
     function testConstructor() public {
         // Expect Revert when we don't own the token id
-        startHoax(address(1));
+        hoax(address(1));
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("NonTokenOwner()"))));
         rental = new Rental(
             address(1),
@@ -71,12 +71,11 @@ contract RentalTest is DSTestPlus {
             collateralPayoutPeriod,
             nullificationTime
         );
-        vm.stopPrank();
 
         // Expect Revert if the borrow doesn't have enough balance
         address lender = address(1);
         address borrower = address(2);
-        startHoax(lender);
+        hoax(lender);
         mockNft.mint(lender, tokenId+1);
         vm.deal(borrower, rentalPayment + collateral - 1);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("InsufficientValue()"))));
@@ -91,7 +90,6 @@ contract RentalTest is DSTestPlus {
             collateralPayoutPeriod,
             nullificationTime
         );
-        vm.stopPrank();
     }
 
     /// -------------------------------------------- ///
@@ -114,15 +112,13 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // Transfer the token back to the lender
-        startHoax(address(1));
+        hoax(address(1));
         mockNft.transferFrom(address(1), lenderAddress, tokenId);
-        vm.stopPrank();
 
         // The Rental can't transfer if we don't approve it
-        startHoax(lenderAddress);
+        hoax(lenderAddress);
         vm.expectRevert("NOT_AUTHORIZED");
         rental.depositNft();
-        vm.stopPrank();
 
         // Rental should not have any eth deposited at this point
         assert(rental.ethIsDeposited() == false);
@@ -134,18 +130,16 @@ contract RentalTest is DSTestPlus {
         vm.stopPrank();
 
         // The rental should not have began since we didn't deposit eth
-        assert(rental.nftIsDeposited() == true);
-        assert(rental.rentalStartTime() == 0);
-        assert(rental.collectedCollateral() == 0);
+        assertTrue(rental.nftIsDeposited());
+        assertEq(rental.rentalStartTime(), 0);
+        assertEq(rental.collectedCollateral(), 0);
 
         // We can't redeposit now even if we get the token back somehow
-        startHoax(address(rental));
+        hoax(address(rental));
         mockNft.transferFrom(address(rental), lenderAddress, tokenId);
-        vm.stopPrank();
-        startHoax(lenderAddress);
+        hoax(lenderAddress);
         vm.expectRevert(abi.encodePacked(bytes4(keccak256("AlreadyDeposited()"))));
         rental.depositNft();
-        vm.stopPrank();
     }
 
     /// @notice Tests depositing the NFT into the contract after the borrower deposits eth
