@@ -227,9 +227,8 @@ contract RentalTest is DSTestPlus {
         vm.deal(lenderAddress, 0);
 
         // The Borrower can deposit eth
-        startHoax(borrowerAddress);
+        hoax(borrowerAddress);
         rental.depositEth{value: rentalPayment + collateral}();
-        vm.stopPrank();
 
         // The rental should now begin!
         assertTrue(rental.ethIsDeposited());
