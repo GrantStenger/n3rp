@@ -9,6 +9,7 @@ import Main from "./pages/Main";
 import Create from "./pages/Create";
 import Find from "./pages/Find";
 import { ContextWrapper } from "./Context";
+import List from "./pages/List";
 
 export const App = () => {
   return (
@@ -18,6 +19,7 @@ export const App = () => {
           <Route path="/" element={<Main />} />
           <Route path="/create" element={<Create />} />
           <Route path="/find" element={<Find />} />
+          <Route path="/list" element={<List />} />
         </Routes>
       </WalletProvider>
     </ContextWrapper>
