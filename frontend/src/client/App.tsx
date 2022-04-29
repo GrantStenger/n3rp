@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  Routes,
-  Route
-} from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import WalletProvider from "./components/WalletProvider";
 import Main from "./pages/Main";
@@ -20,7 +17,7 @@ export const App = () => {
           <Route path="/" element={<Main />} />
           <Route path="/list" element={<List />} />
           <Route path="/explore" element={<Explore />} />
-          <Route path="/rentals" element={<Rentals /> } />
+          <Route path="/rentals" element={<Rentals />} />
           <Route path="/about" element={<About />} />
         </Routes>
       </WalletProvider>
@@ -29,11 +26,6 @@ export const App = () => {
 };
 
 export default App;
-
-
-
-
-
 
 // import React from "react";
 // import { providers } from 'ethers';
@@ -45,7 +37,6 @@ export default App;
 
 // import Main from "./pages/Main";
 // import { ContextWrapper } from "./Context";
-
 
 // // Get environment variables
 // const infuraId = process.env.NEXT_PUBLIC_INFURA_ID as string;
@@ -106,7 +97,6 @@ export default App;
 //     throw err;
 //   }
 // };
-
 
 // export const App = () => {
 //   return (
