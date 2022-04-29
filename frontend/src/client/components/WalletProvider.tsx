@@ -1,8 +1,7 @@
 import React, { FC } from "react";
-import { Provider, chain, defaultChains } from "wagmi";
+import { Provider, createClient, chain, defaultChains } from "wagmi";
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
-import { WalletLinkConnector } from 'wagmi/connectors/walletLink'
 
 // API key for Ethereum node
 // Two popular services are Infura (infura.io) and Alchemy (alchemy.com)
@@ -33,17 +32,24 @@ const connectors = ({ chainId } : { chainId?: number }) => {
       },
     }),
     // WalletLink (coinbase wallet, etc.)
+    /*
     new WalletLinkConnector({
       options: {
         appName: 'n3rp',
         jsonRpcUrl: `${rpcUrl}/${infuraId}`,
       },
     }),
+    */
   ]
 }
 
+const client = createClient({
+  autoConnect: true,
+  connectors: connectors
+});
+
 const WalletProvider : FC = ({ children }) => (
-  <Provider autoConnect={true} connectors={connectors}>
+  <Provider client={client}>
     {children}
   </Provider>
 );

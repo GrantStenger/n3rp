@@ -57,8 +57,8 @@ const MainContent = () => {
         Get started by
       </p>
       <div>
-        <Link to="/create" className="bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Listing an NFT</Link>
-        <Link to="/find" className="ml-4 bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Exploring Current Rentals</Link>
+        <Link to="/list" className="bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Listing an NFT</Link>
+        <Link to="/explore" className="ml-4 bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Exploring Current Rentals</Link>
       </div>
     </div>
   );

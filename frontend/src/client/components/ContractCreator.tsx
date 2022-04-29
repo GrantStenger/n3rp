@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useAccount, useConnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
 import { Formik, Field, useFormik, useFormikContext } from 'formik';
 import { getNFTs, getNFTMetadata } from "../lib/web3";
 import { GetNftMetadataResponse } from "@alch/alchemy-web3";
@@ -141,10 +141,11 @@ const SelectNFTByAddress = () => {
 }
 
 export const ContractCreator = () => {
-  const [{ data, error }, connect] = useConnect()
-  const [{ data: accountData }, disconnect] = useAccount({
-    fetchEns: true,
-  });
+  const { data: accountData } = useAccount();
+  const { data: ensName } = useEnsName({ address: accountData?.address })
+  const { data: ensAvatar } = useEnsAvatar({ addressOrName: accountData?.address });
+  const { connect, connectors, error, isConnecting, pendingConnector } = useConnect();
+  const { disconnect } = useDisconnect();
 
   return (
     <Formik
@@ -163,21 +164,21 @@ export const ContractCreator = () => {
             {accountData ? (  
               <>
                 <div>
-                  {accountData.ens && <img src={accountData.ens?.avatar!} alt="ENS Avatar" />}
+                  {ensName && <img src={ensAvatar!} alt="ENS Avatar" />}
                   <div>Connected to <span className="font-bold">{accountData.connector?.name}</span></div>
                   <div>
-                    {accountData.ens?.name
-                      ? `${accountData.ens?.name} (${accountData.address})`
+                    {ensName
+                      ? `${ensName} (${accountData.address})`
                       : accountData.address}
                   </div>
                 </div>
-                <button onClick={disconnect} className="_button">Disconnect</button>
+                <button onClick={() => disconnect()} className="_button">Disconnect</button>
               </>
             ) : (
               <>
                 <h2 className="text-xl font-bold">Select a wallet</h2>
                 <div className="space-y-2">
-                  {data.connectors.map((connector) => (
+                  {connectors.map((connector) => (
                     <button
                       disabled={!connector.ready}
                       key={connector.id}
@@ -194,7 +195,7 @@ export const ContractCreator = () => {
             )}
           </div>
           {/* Module #2: Select Mode */}
-          {data.connected ? (
+          {accountData ? (
             <div className="_card max-w-120 space-y-4">
               <h2 className="text-xl font-bold">I want to...</h2>
               <div className="space-x-2">
@@ -215,7 +216,7 @@ export const ContractCreator = () => {
               </div>
             </div>
           ) : null}
-          {data.connected && f.values.mode === "BORROW" ? (
+          {accountData && f.values.mode === "BORROW" ? (
             <div className="_card max-w-120 space-y-4">
               <h2 className="text-xl font-bold">Select NFT</h2>
               <SelectNFTByAddress />
