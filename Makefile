@@ -21,13 +21,13 @@ install :; forge install dapphub/ds-test && forge install rari-capital/solmate &
 update:; forge update
 
 # Builds
-build  :; forge clean && forge build --optimize --optimize-runs 1000000
+build  :; forge clean && forge build --optimize --optimizer-runs 1000000
 
 # Tests
-test   :; forge clean && forge test --optimize --optimize-runs 1000000 -v # --ffi # enable if you need the `ffi` cheat code on HEVM
+test   :; forge clean && forge test --optimize --optimizer-runs 1000000 -v # --ffi # enable if you need the `ffi` cheat code on HEVM
 
 # Generate Gas Snapshots
-snapshot :; forge clean && forge snapshot --optimize --optimize-runs 1000000
+snapshot :; forge clean && forge snapshot --optimize --optimizer-runs 1000000
 
 ## Pre-commit hook
 precommit: snapshot
