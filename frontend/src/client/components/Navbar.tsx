@@ -19,6 +19,9 @@ export const Navbar = () => {
           <div className="text-white hover:text-indigo-100 font-bold py-2 px-4">
             <Link to="/find">Find</Link>
           </div>
+          <div className="text-white hover:text-indigo-100 font-bold py-2 px-4">
+            <Link to="/rentals">My Rentals</Link>
+          </div>
           <div className="text-white hover:text-indigo-100 font-bold py-2 pl-4 pr-10">
             <Link to="/about">About</Link>
           </div>
