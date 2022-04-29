@@ -7,19 +7,10 @@
 
 ```
 yarn
-yarn dev:server
+yarn dev
 ```
 
-That should start the server. It will open to http://localhost:7456.
-
-If you'd like to just develop the UI, you can use
-
-```bash
-yarn
-yarn dev:client
-```
-
-To start the native vite client.
+That should start the server. It will open to http://localhost:3000.
 
 ## Building
 
