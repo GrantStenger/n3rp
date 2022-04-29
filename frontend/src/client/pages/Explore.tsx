@@ -1,9 +1,8 @@
 import React from "react";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
-import { ContractsTable } from "../components/ContractsTable";
+import { ExploreRentals } from "../components/ExploreRentals";
 import { useAppContext } from "../Context";
-
 
 const Explore = () => {
   const { name, setName } = useAppContext();
@@ -11,7 +10,7 @@ const Explore = () => {
   return (
     <div className="flex bg-white-100 items-center flex-col justify-between h-screen">
       <Navbar />
-      <ContractsTable />
+      <ExploreRentals />
       <Footer />
     </div>
   );
