@@ -1,20 +1,20 @@
 import React from "react";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
-import { ContractsTable } from "../components/ContractsTable";
+import { ContractCreator } from "../components/ContractCreator";
 import { useAppContext } from "../Context";
 
 
-const Find = () => {
+const List = () => {
   const { name, setName } = useAppContext();
   
   return (
     <div className="flex bg-white-100 items-center flex-col justify-between h-screen">
       <Navbar />
-      <ContractsTable />
+      <ContractCreator />
       <Footer />
     </div>
   );
 };
 
-export default Find;
+export default List;
