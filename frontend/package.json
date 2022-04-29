@@ -30,7 +30,7 @@
     "buffer": "^6.0.3",
     "compression": "1.7.4",
     "cross-env": "^7.0.3",
-    "ethers": "^5.5.4",
+    "ethers": "^5.6.4",
     "events": "^3.3.0",
     "express": "4.17.2",
     "formik": "^2.2.9",
@@ -44,7 +44,7 @@
     "stream-browserify": "^3.0.0",
     "ts-node": "^10.5.0",
     "util": "^0.12.4",
-    "wagmi": "^0.2.12"
+    "wagmi": "^0.3.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.2",
