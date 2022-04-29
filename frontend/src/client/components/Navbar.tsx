@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import nerpLogo from "../../../static/nerpLogoWhite.png";
 
-
 export const Navbar = () => {
   return (
     <header className={"justify-center items-center bg-indigo-400 w-full"}>
@@ -14,10 +13,10 @@ export const Navbar = () => {
         </div>
         <div className="flex">
           <div className="text-white hover:text-indigo-100 font-bold py-2 px-4">
-            <Link to="/create">Create</Link>
+            <Link to="/list">List a Rental</Link>
           </div>
           <div className="text-white hover:text-indigo-100 font-bold py-2 px-4">
-            <Link to="/find">Find</Link>
+            <Link to="/explore">Explore Current Rentals</Link>
           </div>
           <div className="text-white hover:text-indigo-100 font-bold py-2 px-4">
             <Link to="/rentals">My Rentals</Link>

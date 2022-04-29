@@ -6,8 +6,8 @@ import {
 
 import WalletProvider from "./components/WalletProvider";
 import Main from "./pages/Main";
-import Create from "./pages/Create";
-import Find from "./pages/Find";
+import List from "./pages/List";
+import Explore from "./pages/Explore";
 import Rentals from "./pages/Rentals";
 import About from "./pages/About";
 import { ContextWrapper } from "./Context";
@@ -18,8 +18,8 @@ export const App = () => {
       <WalletProvider>
         <Routes>
           <Route path="/" element={<Main />} />
-          <Route path="/create" element={<Create />} />
-          <Route path="/find" element={<Find />} />
+          <Route path="/list" element={<List />} />
+          <Route path="/explore" element={<Explore />} />
           <Route path="/rentals" element={<Rentals /> } />
           <Route path="/about" element={<About />} />
         </Routes>

@@ -23,7 +23,7 @@ const MyListingsView = () => {
             {/* TODO: Check if user has listed NFTs */}
             <p>You haven't listed any NFTs!</p>
             <div>
-                <Link to="/create" className="bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">List a Rental</Link>
+                <Link to="/create" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3 rounded">List a Rental</Link>
             </div>
         </div>
     );
@@ -36,7 +36,7 @@ const MyRentalsView = () => {
             {/* TODO: Check if user has rented NFTs */}
             <p>You haven't rented any NFTs!</p>
             <div>
-                <Link to="/find" className="bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Explore Current Rentals!</Link>
+                <Link to="/find" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3 rounded">Explore Current Rentals!</Link>
             </div>
         </div>
     );

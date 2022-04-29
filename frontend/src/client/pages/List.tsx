@@ -5,7 +5,7 @@ import { ContractCreator } from "../components/ContractCreator";
 import { useAppContext } from "../Context";
 
 
-const Create = () => {
+const List = () => {
   const { name, setName } = useAppContext();
   
   return (
@@ -17,4 +17,4 @@ const Create = () => {
   );
 };
 
-export default Create;
+export default List;

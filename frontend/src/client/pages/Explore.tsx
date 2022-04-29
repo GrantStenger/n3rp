@@ -5,7 +5,7 @@ import { ContractsTable } from "../components/ContractsTable";
 import { useAppContext } from "../Context";
 
 
-const Find = () => {
+const Explore = () => {
   const { name, setName } = useAppContext();
   
   return (
@@ -17,4 +17,4 @@ const Find = () => {
   );
 };
 
-export default Find;
+export default Explore;
