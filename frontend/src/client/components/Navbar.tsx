@@ -20,7 +20,7 @@ export const Navbar = () => {
             <Link to="/find">Find</Link>
           </div>
           <div className="text-white hover:text-indigo-100 font-bold py-2 pl-4 pr-10">
-            <a href="https://github.com/gstenger98/N3RP/blob/master/README.md">About</a>
+            <Link to="/about">About</Link>
           </div>
           <button className="float-right bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
             Connect Wallet

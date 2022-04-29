@@ -4,6 +4,12 @@
 
 @import "tailwindcss/utilities";
 
+@layer base {
+  h1 {
+    @apply text-4xl;
+  }
+}
+
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

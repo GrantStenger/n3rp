@@ -8,6 +8,7 @@ import WalletProvider from "./components/WalletProvider";
 import Main from "./pages/Main";
 import Create from "./pages/Create";
 import Find from "./pages/Find";
+import About from "./pages/About";
 import { ContextWrapper } from "./Context";
 
 export const App = () => {
@@ -18,6 +19,7 @@ export const App = () => {
           <Route path="/" element={<Main />} />
           <Route path="/create" element={<Create />} />
           <Route path="/find" element={<Find />} />
+          <Route path="/about" element={<About />} />
         </Routes>
       </WalletProvider>
     </ContextWrapper>
