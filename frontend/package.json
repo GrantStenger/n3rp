@@ -24,6 +24,7 @@
     "@alch/alchemy-web3": "^1.2.4",
     "@headlessui/react": "^1.4.3",
     "@heroicons/react": "^1.0.5",
+    "@types/react-datepicker": "^4.4.1",
     "autoprefixer": "^10.4.2",
     "axios": "^0.26.0",
     "browserify-zlib": "^0.2.0",

@@ -4,7 +4,6 @@ import { ListingPanel } from "./ListingPanel";
 import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
-import { diffieHellman } from "crypto";
 
 export const ExploreRentals = () => {
   const nft: NftWithMetadata = {
