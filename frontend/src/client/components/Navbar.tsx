@@ -22,10 +22,7 @@ export const Navbar = () => {
   const login = async () => {
     if (!isAuthenticated) {
       await authenticate({ signingMessage: "Log into N3RP" })
-        .then(function (user) {
-          console.log("logged in user:", user);
-          console.log(user!.get("ethAddress"));
-        })
+        .then(function (user) {})
         .catch(function (error) {
           console.log(error);
         });
