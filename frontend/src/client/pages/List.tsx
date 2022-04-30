@@ -1,13 +1,16 @@
 import { useFormik } from "formik";
-import React from "react";
+import React, { useState } from "react";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
 import { DayPicker } from "react-day-picker";
-import { Nft } from "../../../types/nftTypes.js";
+import { ListingPanel } from "../components/ListingPanel";
+import { mergeNftsWithMetadata } from "../lib/fetchNft";
 import { useMoralis } from "react-moralis";
+import { NftWithMetadata, Nft } from "../../../types/nftTypes.js";
+
 import "react-day-picker/dist/style.css";
 
-const buttonStyle = "w-48 bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md";
+const buttonBaseStyle = "w-48 bg-indigo-800 text-white font-bold py-2 px-4 rounded-md";
 const inputStyle = "border-2 flex-grow border-slate-500 p-2 rounded-md";
 const labelStyle = "font-bold w-40";
 const FormSection: React.FC<{ center?: boolean }> = ({ center, children }) => {
@@ -18,6 +21,8 @@ const Divider = () => <hr className="border-slate-300" />;
 
 const List = () => {
   const { Moralis } = useMoralis();
+  const [nft, setNft] = useState<NftWithMetadata | null>(null);
+  const [validNft, setValidNft] = useState(false);
 
   // A complex subclass of Moralis.Object
   const Listing = Moralis.Object.extend(
@@ -39,7 +44,7 @@ const List = () => {
     });
   };
 
-  const formik = useFormik({
+  const { handleSubmit, handleChange, values, touched } = useFormik({
     initialValues: {
       collection: "",
       id: "",
@@ -63,10 +68,47 @@ const List = () => {
     },
   });
 
+  const handleBlur = async () => {
+    if (values.collection.trim() !== "" && values.id.trim() !== "") {
+      try {
+        const NftsWithMetadata = await mergeNftsWithMetadata([
+          {
+            listing: {
+              description: values.description,
+              datesForRent: [],
+              pricePerDay: values.pricePerDay,
+              collateral: values.collateral,
+            },
+            specification: {
+              collection: values.collection,
+              id: values.id,
+            },
+          },
+        ]);
+        setNft(NftsWithMetadata[0]);
+        setValidNft(true);
+      } catch (e) {
+        console.log("BAD NFT");
+        setValidNft(false);
+      }
+    }
+  };
+
+  let buttonStyle = buttonBaseStyle;
+
+  if (validNft) {
+    buttonStyle += " hover:bg-indigo-700";
+  }
+
   return (
     <div className="flex bg-white-100 items-center flex-col justify-between h-screen">
       <Navbar />
-      <form onSubmit={formik.handleSubmit} className="flex w-2/3 mr-auto p-8 flex-col gap-8">
+      {nft && (
+        <div className="w-96">
+          <ListingPanel nft={nft} pureNft={true} />
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="flex w-2/3 mr-auto p-8 flex-col gap-8">
         <h1 className="font-extrabold text-slate-800 sm:text-5xl md:text-6xl">List a Rental</h1>
         {/* <div className="flex flex-row">
           <button className={`${buttonStyle} rounded-tr-none rounded-br-none`}>Connect Wallet</button>
@@ -87,15 +129,17 @@ const List = () => {
           <input
             id="collection"
             name="collection"
-            onChange={formik.handleChange}
-            value={formik.values.collection}
+            onBlur={handleBlur}
+            onChange={handleChange}
+            value={values.collection}
             className={`${inputStyle}`}
           ></input>
           <input
             id="id"
             name="id"
-            onChange={formik.handleChange}
-            value={formik.values.id}
+            onBlur={handleBlur}
+            onChange={handleChange}
+            value={values.id}
             className={`${inputStyle}`}
           ></input>
         </FormSection>
@@ -106,8 +150,8 @@ const List = () => {
           <textarea
             id="description"
             name="description"
-            onChange={formik.handleChange}
-            value={formik.values.description}
+            onChange={handleChange}
+            value={values.description}
             className={`${inputStyle} h-48`}
           ></textarea>
         </FormSection>
@@ -126,8 +170,8 @@ const List = () => {
             type="number"
             step="any"
             min="0"
-            onChange={formik.handleChange}
-            value={formik.values.pricePerDay}
+            onChange={handleChange}
+            value={values.pricePerDay}
             className={inputStyle}
           ></input>
           <input
@@ -136,8 +180,8 @@ const List = () => {
             type="number"
             step="any"
             min="0"
-            onChange={formik.handleChange}
-            value={formik.values.collateral}
+            onChange={handleChange}
+            value={values.collateral}
             className={inputStyle}
           ></input>
         </FormSection>
@@ -149,7 +193,7 @@ const List = () => {
           <label className={labelStyle}>Collateral Payback</label>
           <input type="text" className={inputStyle}></input>
         </FormSection> */}
-        <button className={buttonStyle} type="submit">
+        <button className={buttonStyle} disabled={!validNft} type="submit">
           List my Rental!
         </button>
       </form>

@@ -1,7 +1,7 @@
 import React from "react";
 import { NftWithMetadata, Avaliability, AvaliabilityStatus } from "../../../types/nftTypes.js";
 
-export const ListingPanel = ({ nft }: { nft: NftWithMetadata }) => {
+export const ListingPanel = ({ nft, pureNft = false }: { nft: NftWithMetadata; pureNft?: boolean }) => {
   const renderAvaliability = (availability: Avaliability) => {
     let statusText;
     switch (availability.status) {
@@ -41,7 +41,7 @@ export const ListingPanel = ({ nft }: { nft: NftWithMetadata }) => {
         <div className="w-full flex items-center pb-2">
           <h1 className="text-lg font-bold">{nft.name}</h1>
           <div className="flex-grow pl-1"></div>
-          <p>ETH({nft.nft.listing.pricePerDay}) / day</p>
+          {!pureNft && <p>ETH({nft.nft.listing.pricePerDay}) / day</p>}
         </div>
         {nft.attributes.map(attribute => (
           <div
@@ -51,8 +51,12 @@ export const ListingPanel = ({ nft }: { nft: NftWithMetadata }) => {
             <span className="font-bold">{attribute.traitType}</span>: {attribute.value}
           </div>
         ))}
-        <p>{nft.nft.listing.description}</p>
-        <div className="pt-2">{renderAvaliability(nft.avaliability)}</div>
+        {!pureNft && (
+          <>
+            <p>{nft.nft.listing.description}</p>
+            <div className="pt-2">{renderAvaliability(nft.avaliability)}</div>
+          </>
+        )}
       </div>
     </div>
   );

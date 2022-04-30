@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { NftWithMetadata, Nft, AvaliabilityStatus, Attribute } from "../../../types/nftTypes.js";
+import { NftWithMetadata, Nft } from "../../../types/nftTypes.js";
 import { ListingPanel } from "./ListingPanel";
+import { Popup } from "./Popup";
+import { RentDetails } from "./RentDetails";
 import { useMoralisQuery } from "react-moralis";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { getNFTs, getNFTMetadata } from "../lib/web3";
+import { mergeNftsWithMetadata } from "../lib/fetchNft";
 
 export const ExploreRentals = () => {
   const [dateFilterVisible, setDateFilterVisible] = useState(false);
@@ -13,64 +15,11 @@ export const ExploreRentals = () => {
   const [costFilterVisible, setCostFilterVisible] = useState(false);
   const [startCost, setStartCost] = useState<null | number>(null);
   const [endCost, setEndCost] = useState<null | number>(null);
-  const { data: rawNftListings, error, isLoading } = useMoralisQuery("Listing", query => query.limit(8), [], {});
 
+  const { data: rawNftListings, error, isLoading } = useMoralisQuery("Listing", query => query.limit(8), [], {});
   const [nfts, setNfts] = useState<NftWithMetadata[]>([]);
 
-  const getMetadataForAllNfts = async (nfts: Nft[]) => {
-    const awaitables = [];
-    for (const nft of nfts) {
-      awaitables.push(getNFTMetadata(nft.specification.collection, nft.specification.id));
-    }
-    return Promise.all(awaitables);
-  };
-
-  const calculateAvaliabiltyStatus = (nft: Nft) => {
-    const now = new Date();
-    if (nft.listing.datesForRent.some(date => date.startDate <= now && date.endDate >= now)) {
-      return AvaliabilityStatus.Avaliabile;
-    } else {
-      return AvaliabilityStatus.Unavaliabile;
-    }
-  };
-
-  const mapIpfsToUrl = (ipfs: string) => {
-    return `https://ipfs.io/ipfs/${ipfs.slice(7)}`;
-  };
-
-  const mergeNftsWithMetadata = async (nfts: Nft[]) => {
-    let nftsWithMetadata = [];
-    const metadatas = await getMetadataForAllNfts(nfts);
-    for (let i = 0; i < nfts.length; i++) {
-      const metadata = metadatas[i].metadata!;
-
-      let attributes: Attribute[] = [];
-      if (metadata.attributes) {
-        attributes = metadata.attributes.map(attribute => {
-          return {
-            traitType: attribute.trait_type,
-            value: attribute.value,
-          };
-        });
-      }
-
-      let image = metadata.image!;
-
-      if (image.startsWith("ipfs://")) {
-        image = mapIpfsToUrl(image);
-      }
-
-      const nftWithMetadata = {
-        nft: nfts[i],
-        name: metadata.name!,
-        image,
-        attributes,
-        avaliability: { status: calculateAvaliabiltyStatus(nfts[i]) },
-      };
-      nftsWithMetadata.push(nftWithMetadata);
-    }
-    setNfts(nftsWithMetadata);
-  };
+  const [selectedNft, setSelectedNft] = useState<NftWithMetadata | null>(null);
 
   useEffect(() => {
     const nftListings: Nft[] = rawNftListings.map(nft => {
@@ -79,7 +28,7 @@ export const ExploreRentals = () => {
         specification: nft.attributes.nftSpecification,
       };
     });
-    mergeNftsWithMetadata(nftListings);
+    mergeNftsWithMetadata(nftListings).then(nftsWithMetadata => setNfts(nftsWithMetadata));
   }, [rawNftListings]);
 
   if (isLoading) {
@@ -197,6 +146,11 @@ export const ExploreRentals = () => {
 
   return (
     <>
+      {selectedNft && (
+        <Popup closeHandler={() => setSelectedNft(null)}>
+          <RentDetails nft={selectedNft} />
+        </Popup>
+      )}
       <div className="container">
         <div className="flex pb-3">
           <div className="mr-4">{renderDateFilter()}</div>
@@ -204,7 +158,9 @@ export const ExploreRentals = () => {
         </div>
         <div className="grid grid-cols-4 gap-4 w-full">
           {filteredList.map((nft, index) => (
-            <ListingPanel nft={nft} key={index} />
+            <div onClick={() => setSelectedNft(nft)} key={index}>
+              <ListingPanel nft={nft} />
+            </div>
           ))}
         </div>
       </div>
