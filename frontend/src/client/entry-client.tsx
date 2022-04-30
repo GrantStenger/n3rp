@@ -8,8 +8,8 @@ import { MoralisProvider } from "react-moralis";
 ReactDOM.hydrate(
   <React.StrictMode>
     <MoralisProvider
-      serverUrl="https://9soacisxu22u.usemoralis.com:2053/server"
-      appId="fqMyf2nTsjNW99WTHFmm5GwkXq3skEXNtxRqfSqP"
+      serverUrl="https://rvzubkq2tkj7.usemoralis.com:2053/server"
+      appId="Z9yUNCpsZ78x08I4ZZYu14TJBnqryBxOxRe4l2lz"
     >
       <BrowserRouter>
         <App />

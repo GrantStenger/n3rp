@@ -1,8 +1,8 @@
 // declare modules here
 
 export interface NftSpecification {
-    nftCollection: string;
-    nftId: string;
+    collection: string;
+    id: string;
 }
 
 export interface RentContract {
@@ -20,7 +20,6 @@ export interface AvaliableDates {
 }
 
 export interface Listing {
-    name: string;
     description: string;
     datesForRent: AvaliableDates[];
     pricePerDay: number;
@@ -30,7 +29,7 @@ export interface Listing {
 export interface Nft {
     contract?: RentContract;
     listing: Listing;
-    nftSpecification: NftSpecification;
+    specification: NftSpecification;
 }
 
 export enum AvaliabilityStatus {
@@ -51,6 +50,7 @@ export interface Attribute {
 
 export interface NftWithMetadata {
     nft: Nft;
+    name: string;
     image: string;
     avaliability: Avaliability;
     attributes: Attribute[];

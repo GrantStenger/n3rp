@@ -39,12 +39,15 @@ export const ListingPanel = ({ nft }: { nft: NftWithMetadata }) => {
       </div>
       <div>
         <div className="w-full flex items-center pb-2">
-          <h1 className="text-lg font-bold">{nft.nft.listing.name}</h1>
+          <h1 className="text-lg font-bold">{nft.name}</h1>
           <div className="flex-grow pl-1"></div>
           <p>ETH({nft.nft.listing.pricePerDay}) / day</p>
         </div>
         {nft.attributes.map(attribute => (
-          <div className="inline-block bg-slate-200 px-2 py-1 rounded-xl text-xs mr-2 mb-2">
+          <div
+            className="inline-block bg-slate-200 px-2 py-1 rounded-xl text-xs mr-2 mb-2"
+            key={attribute.traitType + attribute.value}
+          >
             <span className="font-bold">{attribute.traitType}</span>: {attribute.value}
           </div>
         ))}

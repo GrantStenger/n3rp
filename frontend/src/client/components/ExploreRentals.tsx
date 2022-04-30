@@ -1,50 +1,93 @@
-import React, { useState, forwardRef } from "react";
-import { NftWithMetadata, AvaliabilityStatus } from "../../../types/nftTypes.js";
+import React, { useState, useEffect } from "react";
+import { NftWithMetadata, Nft, AvaliabilityStatus, Attribute } from "../../../types/nftTypes.js";
 import { ListingPanel } from "./ListingPanel";
+import { useMoralisQuery } from "react-moralis";
 import DatePicker from "react-datepicker";
-
 import "react-datepicker/dist/react-datepicker.css";
+import { getNFTs, getNFTMetadata } from "../lib/web3";
 
 export const ExploreRentals = () => {
-  const nft: NftWithMetadata = {
-    nft: {
-      listing: {
-        name: "Jelly bean",
-        description: "it has a crown and stuff",
-        datesForRent: [
-          {
-            startDate: new Date(),
-            endDate: new Date(2022, 6, 1),
-          },
-        ],
-        pricePerDay: 1,
-        collateral: 2,
-      },
-      nftSpecification: {
-        nftCollection: "0xa755a670aaf1fecef2bea56115e65e03f7722a79",
-        nftId: "0",
-      },
-    },
-    image: "https://ipfs.io/ipfs/QmNj6UmToxxnJFqW13GkG3NHX1FXtHsHwAbuB8uQasPZUm",
-    avaliability: {
-      status: AvaliabilityStatus.Avaliabile,
-    },
-    attributes: [{ traitType: "asdf", value: "asdf2" }],
-  };
-
-  let nfts = [];
-  for (let i = 0; i < 8; i++) {
-    nfts.push(nft);
-  }
-
   const [dateFilterVisible, setDateFilterVisible] = useState(false);
-
   const [dateRange, setDateRange] = useState<[null | Date, null | Date]>([null, null]);
   const [startDate, endDate] = dateRange;
-
   const [costFilterVisible, setCostFilterVisible] = useState(false);
   const [startCost, setStartCost] = useState<null | number>(null);
   const [endCost, setEndCost] = useState<null | number>(null);
+  const { data: rawNftListings, error, isLoading } = useMoralisQuery("Listing", query => query.limit(8), [], {});
+
+  const [nfts, setNfts] = useState<NftWithMetadata[]>([]);
+
+  const getMetadataForAllNfts = async (nfts: Nft[]) => {
+    const awaitables = [];
+    for (const nft of nfts) {
+      awaitables.push(getNFTMetadata(nft.specification.collection, nft.specification.id));
+    }
+    return Promise.all(awaitables);
+  };
+
+  const calculateAvaliabiltyStatus = (nft: Nft) => {
+    const now = new Date();
+    if (nft.listing.datesForRent.some(date => date.startDate <= now && date.endDate >= now)) {
+      return AvaliabilityStatus.Avaliabile;
+    } else {
+      return AvaliabilityStatus.Unavaliabile;
+    }
+  };
+
+  const mapIpfsToUrl = (ipfs: string) => {
+    return `https://ipfs.io/ipfs/${ipfs.slice(7)}`;
+  };
+
+  const mergeNftsWithMetadata = async (nfts: Nft[]) => {
+    let nftsWithMetadata = [];
+    const metadatas = await getMetadataForAllNfts(nfts);
+    for (let i = 0; i < nfts.length; i++) {
+      const metadata = metadatas[i].metadata!;
+
+      let attributes: Attribute[] = [];
+      if (metadata.attributes) {
+        attributes = metadata.attributes.map(attribute => {
+          return {
+            traitType: attribute.trait_type,
+            value: attribute.value,
+          };
+        });
+      }
+
+      let image = metadata.image!;
+
+      if (image.startsWith("ipfs://")) {
+        image = mapIpfsToUrl(image);
+      }
+
+      const nftWithMetadata = {
+        nft: nfts[i],
+        name: metadata.name!,
+        image,
+        attributes,
+        avaliability: { status: calculateAvaliabiltyStatus(nfts[i]) },
+      };
+      nftsWithMetadata.push(nftWithMetadata);
+    }
+    setNfts(nftsWithMetadata);
+  };
+
+  useEffect(() => {
+    const nftListings: Nft[] = rawNftListings.map(nft => {
+      return {
+        listing: nft.attributes.listing,
+        specification: nft.attributes.nftSpecification,
+      };
+    });
+    mergeNftsWithMetadata(nftListings);
+  }, [rawNftListings]);
+
+  if (isLoading) {
+    return <div>Loading</div>;
+  }
+  if (error) {
+    return <div>ERROR {error}</div>;
+  }
 
   const renderDateFilter = () => {
     let text = "Filter by date";
@@ -133,20 +176,21 @@ export const ExploreRentals = () => {
     );
   };
 
+  let filteredList = [...nfts];
   if (startDate && endDate) {
-    nfts = nfts.filter(nft => {
+    filteredList = filteredList.filter(nft => {
       return nft.nft.listing.datesForRent.some(avaliableDate => {
         return avaliableDate.startDate <= startDate && avaliableDate.endDate >= endDate;
       });
     });
   }
   if (startCost) {
-    nfts = nfts.filter(nft => {
+    filteredList = filteredList.filter(nft => {
       return nft.nft.listing.pricePerDay >= startCost;
     });
   }
   if (endCost) {
-    nfts = nfts.filter(nft => {
+    filteredList = filteredList.filter(nft => {
       return nft.nft.listing.pricePerDay <= endCost;
     });
   }
@@ -159,8 +203,8 @@ export const ExploreRentals = () => {
           <div>{renderCostFilter()}</div>
         </div>
         <div className="grid grid-cols-4 gap-4 w-full">
-          {nfts.map(nft => (
-            <ListingPanel nft={nft} />
+          {filteredList.map((nft, index) => (
+            <ListingPanel nft={nft} key={index} />
           ))}
         </div>
       </div>
