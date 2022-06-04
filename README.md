@@ -6,53 +6,82 @@
 
 
 ## Introduction
-The NFT Rental Protocol (N3RP) allows owners to rent out their NFTs for a specified time period in exchange for payment. Do your NFTs give you access to exclusive events you can't attend? N3RP compensates your for your fomo with ETH payments while temporary borrowers get the chance of flexing flashy blue chips. 
-
-My intention is to implement the functionality for [standard leases](https://en.wikipedia.org/wiki/Lease) applied in the context of digital assets (specifically [ERC721 tokens](https://docs.openzeppelin.com/contracts/4.x/api/token/erc721)).
+As NFT holders start to gain utility from their NFTs in the form of token-gated events, groups, and products, a critical building block is missing: rentals. The NFT Rental Protocol (n3rp) solves this problem by allowing owners to rent out their NFTs for a specified period of time in exchange for a payment and backed by collateral. The ERC721 NFT standard does not include functionality around temporary NFT ownership. We propose a solution requiring an initial payment, a specified return by time, collateralization, and a collateralization pay out period. 
 
 
 ## Motivation
 
-Token-gated event access is becoming an increasingly attractive and reliable pathway for the everyday crypto-user to attend events like concerts, parties, and conferences. The trouble is, while token-gated event access guarantees the owner access to a given event, it only guarantees the owner access. This is suboptimal in the following sense: in the case that the owner is unable to attend the event, he cannot easily lend it to a potential attendee for a suitable period of time (say, for the duration of the event). To bring this dynamic to light, consider the following hypothetical situation.
+NFTs are becoming an increasingly important part of people's lives. They are markers of social clout, act as tickets to events, represent membership in clubs, and more. As the utility of NFTs increases, there will be an increasing need for basic financial primitives around NFT ownership. 
 
-Alice has lifetime season tickets to the games of her favorite sports team, represented as NFT #2a (her seat) from the Warriors collection created by NBA Labs. Bob would love to borrow Alice’s ticket to see the game, but doesn’t want to pay for season tickets. In this case, Alice would require a payment and the assurance that Bob will return the tickets to her. 
+In the real world, rentals happen through either a trusted intermediary (e.g. a car dealership) or a trust-based relationship (e.g. a personal or familial bond). Unfortunately, there is currently no good way to trustlessly lend an NFT to someone who wants to take advantage of its utility for a temporary period of time.
 
-How can these strangers coordinate this transaction safely? Alice can either transfer ownership to Bob or she can keep it for herself. In the first case, Alice has no guarantee that Bob will transfer ownership back to her after the game. In the second case, Bob can’t enter the stadium. Even if Alice shares her private keys with Bob, Hacker Hank might be listening and steal her ticket or Bob himself might maliciously steal her assets. In either case, it seems that temporary ownership strategies fall short. Within the constraints of the ERC 721 standard, assigning temporary ownership is impossible. 
+For example: Owners of Bored Apes are invited to exclusive events at crypto conferences. Alice, a Bored Ape owner, knows she will be missing the upcoming Crypto Bahamas conference. Bob, another crypto enthusiast who doesn't own a Bored Ape, will be at the Crypto Bahamas conference and would love to go to the Bored Ape meetup. Alice would like to send her Bored Ape to Bob for the day for an agreed-upon rental price and the assurance that Bob will send her the NFT back.
+
+The ERC721 token standard has no native functionality for the type of temporary ownership that Alice and Bob need. With the ERC721 token standard, Alice would have three options to send Bob the NFT: (1) send Bob the NFT and trust Bob to return it, (2) set up a 2-of-3 multisig wallet with Bob and a trusted intermediary, or (3) give Bob the private keys to her wallet.
+
+In the first case, Bob could easily keep the NFT for himself, and Alice would lose a valuable asset. In the second case, Alice and Bob would need to find a trusted intermediary, which is inconvenient, costly, vulnerable to attacks, and against the spirit of decentralized trustlessness. In the third case, Bob could easily use Alice's key to transfer the NFT (and anything else in her wallet!) to himself, with no recourse. Within the ERC721 standard, trustless NFT ownership is impossible.
+
+Rentals are a critical primitive in any asset-based economy, and it is inevitable and essential to the health of the crypto ecosystem that they be introduced. n3rp (the NFT Rental Protocol) proposes the first protocol for trustless NFT rentals. Our hope is that with n3rp, we will have both opened up new and exciting use cases for NFT utility and contributed an important building block in the infrastructure of crypto finance.
+
 
 
 ## Mechanism
 
-1. The lender has an NFT they're willing to lend, and a borrower has ETH they're willing to pay and put up as collateral in order to borrow the NFT for a specified period of time. 
+1. The lender has an NFT they're willing to lend, and a borrower has ETH they're willing to pay and put up as collateral in order to borrow the lender's NFT for a specified period of time.
 
-2. The lender and borrower meet in a marketplace and agree upon the following terms:
+2. The lender and borrower meet in a marketplace and agree on the following terms:
 
-    a) The NFT: the NFT which must be owned by the lender that the borrower wants to rent
+    a) The NFT: a specific NFT which the lender owns and the borrower wants to borrow. 
 
-    b) The base payment: the base payment in ETH that the borrower agrees to pay the lender, which is all that is paid if the borrower returns the NFT before the rental period ends
+    b) The rental fee: the fee (in ETH) that the borrower agrees to pay the lender.
 
-    c) The rental due date: the time the borrower must return the NFT by before additional late fees accumulate
+    c) The rental due date: the time by which the borrower must return the NFT before additional late fees accumulate.
 
-    d) The collateral: the ETH the borrower puts up which gets paid out linearly to the lender during the collateral payout period beginning at the end of the rental period
+    d) The collateral: the ETH the borrower locks up until he or she returns the NFT. This collateral acts as an insurance policy for the lender. If the borrower does not return the NFT, the lender will be paid the collateral over the collateral payout period.
 
-    e) The collateral payout period: the amount of time over which the collateral gets paid from the borrower to the lender if the NFT is not yet returned to the contract
+    e) The collateral payout period: the amount of time over which the collateral gets paid to the lender if the NFT is not returned to the contract.
 
-    f) The nullification period: the period by which if both parties haven't deposited their required assets the contract is nullified.
+3. One of the parties creates the contract with the informally agreed-upon terms; if they are the lender, they send their NFT to the contract. If they are the borrower, they send their rental fee plus collateral to the contract. 
 
-3. One of the parties creates the contract with the informally agreed upon terms; if they are the lender, they send their NFT to the contract, and if they are the borrower, they send their base payment plus collateral to the contract. This contract will also include a nullification time by which the contract becomes nullified if the other party does not send their designated assets by this time. 
-
-4. With this contract created and one party having sent their designated assets, there are two cases to consider: the second party either a) fails to send their assets before the nullification period, or b) successfully sends their assets before the nullification period.
-
-    a) In the first case, the first party has the ability to withdraw their assets at any point if the second party has not deposited their full amount. If the nullification date comes and the second party has not deposited their required assets, the first party's assets are returned to them.
-    
-    b) In the second case where both parties deposit their assets before the nullification date, the rental period begins. At the moment the final asset enters the contract, the NFT is sent to the borrower and the rental payment is sent to the lender. 
+4. Either party can remove their assets from the contract at any point before the other party sends their assets. If the borrower gets cold feet, for example, the borrower can simply claim back their NFT. 
 
 5. How might this contract be concluded? There are three cases.
 
-    a) In the typical case, the borrower returns the NFT to the contract before the rental due date. In this scenario, the NFT is returned to the lender, the collateral is returned to the borrower, and the contract is terminated. 
+    a) In the expected case, the borrower returns the NFT to the contract before the rental due date. In this scenario, the NFT is returned to the lender, the collateral is returned to the borrower, and the contract is terminated.
 
-    b) In the case where the NFT is returned during the collateral payout period, the lender is sent both their NFT and also the proportion of the collateral they are owed, the borrower is sent the collateral remaining, and the contract is terminated. 
+    b) In the case where the NFT is returned during the collateral payout period, the lender is sent both their NFT and the proportion of the collateral they are owed. The borrower is sent the remaining collateral, and the contract is terminated. 
     
-    c) In the case where the borrower never returns the NFT, when the collateral payout period ends, the lender can then withdraw the full collateral from the contract, the borrower keeps the NFT having paid a premium of the base payment plus collateral, and the contract is terminated. 
+    c) In the case where the borrower does not return the NFT before the end of the collateral payout period, the lender can then withdraw the full collateral from the contract. The borrower keeps the NFT (having paid the base payment plus collateral as its cost) and the contract is terminated.
+
+
+## Evaluation
+
+NFT rentals are an important primitive in DeFi and crypto at large. n3rp is only the first step in a series of innovations that will enable blockchain-based rentals to be used to their full potential. n3rp can be expanded to include features such:
+
+1. Rental extensions: a lender and borrower may agree to extend the rental period without creating a new contract
+2. Rental cancellations: a lender may want to unexpectedly end the rental early. In this case, the lender and borrower can decide on an agreed-upon fee in advance to void the rental before its due date.
+3. Other forms of collateral: lenders may not have enough liquid ETH to put up as collateral and instead may prefer another asset (i.e. a different token, another NFT, or even collateral that is staked elsewhere)
+4. Two-sided rentals (i.e. temporary trades): two parties may have NFTs that they'd like to swap with each other for a temporary period. They can each send their respective NFT (and maybe additional collateral) to a smart contract and swap NFTs for a limited time.
+5. Rental transferability: the borrower may decide that they want to lend their rented NFT to a third party.
+6. Flash rentals: just as Aave implemented flash loans that don't require collateral for tokens, flash rentals can be implemented for NFTs that are needed only for a very specific use case (and not an extended period of time)
+
+There are many other NFT rental innovations that this paper will not touch on. However, what is clear is that the ERC-721 standard is not adequate for rentals. Over-collateralized rentals -- the only elegant ERC-721 loan solution -- are suboptimal because they lock people who don't have a high amount of liquid ETH out of the rental ecosystem. This becomes particularly problematic for rentals of higher-cost assets because one of the primary reasons people rent high-cost assets is because they don't have enough money to buy them outright.
+
+There is a need for a new ERC standard which defines temporary ownership properties within the state of the token. This would enable any NFT owner to temporarily transfer ownership to another user within the NFT's core functionality. A new, rental-compliant ERC standard would be a major step forward in creating NFTs as a viable asset class.
+
+
+## Further Discussion
+
+The n3rp NFT Rental Protocol can be framed as a fundamentally different financial primitive: NFT options. In traditional option trading, a trader will pay a small fee to secure the opportunity to buy a security at a fixed price. The option expires at a certain date, at which point the trader can decide whether or not to exercise it. If the price of the security has dropped below the fixed price agreed upon in the option, the trader will not buy the security. If the price of the security is higher than the fixed price agreed upon in the option, the trader will buy the security (and profit).
+
+In n3rp, the rental fee is the option price and the collateral is the fixed price of the security. The borrower pays the rental fee to get the NFT. If, at the end of the rental period, the market price of the NFT is lower than the price of the collateral, the renter will return the NFT as expected. If the market price of the NFT is higher than the price of the collateral, it will be profitable for the renter to keep the NFT. 
+
+In traditional finance, this would be as if the trader buys a security upfront and pays an additional premium for the right to sell the security at either its original price or its new price. However, in our case, the security itself (the NFT) might actually have utility for the trader. The n3rp protocol, by enabling NFT rentals, also enables NFT options trading.
+
+
+## Conclusion
+
+NFTs are becoming increasingly useful in the world. Today, they are already used for events, membership, clout, and more. In the future, they will be used as representations of physical assets, markers of historical events, digital avatars, and much, much more. In order for this future to come to fruition, an entire class of primitives around the handling of assets needs to be built. We hope that n3rp is the first of many.
 
 
 ## Blueprint
@@ -101,54 +130,6 @@ Solidity and file structuring guidance:
 4. https://github.com/m1guelpf/erc721-drop 
 5. https://github.com/FrankieIsLost/takeover 
 6. https://github.com/mazurylabs/mazury-frontend
-
-
-## Questions
-1. Is collateral required? If the NFT needs to be transfered to the borrower's EOA then collateral is likely required. 
-2. Do we need to inherit from ERC721? PawnBank does not, Takeover does, CRISP does but is also abstract, RICKS inherits from ERC20 and ERC721Holder...
-3. Are all my functions/variables properly scoped?
-4. Do I use memory/storage in the correct places?
-5. Which functions need to be payable?
-    payable if you want to get money from the sender
-    on the function that the borrower calls to put up their collateral (call a payable function with a certain amt)
-    how would the contract send money back?
-        not payable (only when function receives money)
-        payable(address sending to).call({value: amt})
-6. Am I using immutable correctly?
-7. Do I use SafeMath/PRBMathSD59x18 in the correct places?
-8. What license should I use for this? GPL-3.0? MIT? Unliscence?
-9. Are there other error conditions I should consider? How do I integrate these errors correctly?
-10. Who calls this contract? How do we make sure both parties consent to this agreement?
-11. What are clearest variable names?
-    a. originalOwner vs lenderAddress?
-    b. temporaryOwner vs borrowerAddress?
-    c. expiry vs expirationTime?
-    d. costToLease vs initialPayment?
-12. How can this be exploited?
-13. Should the LeaseNFT contract be abstract or should I implement each of the ERC721 functions?
-14. How could we accept other forms of collateral other than ETH?
-15. Users shouldn't have to redeploy this contract everytime they want to create a lease. Create a Lease struct
-    containing the relevant information for each lender-borrower-nft object and make a map of all live leases.
-    The drawback of this is that everyone relies on the same contract, so if anything breaks risk/security is 
-    spread across all users. The benefits is that it'll be cheaper for uses because they won't have to redeploy.
-16. Which functions should be view/pure?
-17. Do any get (view) functions need to be added?
-18. None of our functions have any returns. Should they have any?
-19. Am I handling ETH-Wei conversions correctly? Could a contract be created with a decimal ETH payment or collateral?
-20. Do I need to do anything specific to terminate the contract?
-21. Confirm that the calculations for how much the lender can withdraw during and after the payout period is correct.
-22. What are standard solidity conventions about enters between functions, ifs, requires, etc?
-23. Make sure this code accords to standard solidity style guidelines.
-
-
-## To Do's:
-1. Write tests (done)
-2. Answer all of the above questions
-3. Deploy to EVM
-4. Add renew lease functionality
-5. Encode payment methods other than lump sum (periodic payments being an obvious alternative)
-6. Add auction structure where potential borrowers place bids for NFTs they'd like to borrow over specified time periods
-7. Deploy to Avalanche or Arbitrum
 
 
 ## Memes
