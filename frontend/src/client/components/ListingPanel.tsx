@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { NftWithMetadata, Avaliability, AvaliabilityStatus } from "../../../types/nftTypes.js";
-import upArrow from "../../../static/up-arrow.svg";
-import downArrow from "../../../static/down-arrow.svg";
+import upArrow from "../../../static/upArrow.svg";
+import downArrow from "../../../static/downArrow.svg";
 
 export const ListingPanel = ({
   nft,
   pureNft = false,
   desc = true,
 }: {
-  nft: NftWithMetadata;
+  nft: NftWithMetadata | null;
   pureNft?: boolean;
   desc?: boolean;
 }) => {
@@ -51,7 +51,7 @@ export const ListingPanel = ({
           {desc && (
             <div className="border border-gray-200 rounded-lg shadow-md mt-2">
               <div className="font-bold text-slate-800 text-xl py-3 px-6 border-b border-gray-200">Description</div>
-              <div className="bg-gray-50 w-full flex items-center px-6 py-4">
+              <div className="bg-gray-50 w-full rounded-b-lg flex items-center px-6 py-4">
                 <h1 className="text-lg font-semibold">{nft.name}</h1>
                 <div className="flex-grow pl-1"></div>
                 {!pureNft && <p>ETH({nft.nft.listing.pricePerDay}) / day</p>}

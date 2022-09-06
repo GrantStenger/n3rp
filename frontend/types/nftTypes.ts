@@ -20,7 +20,7 @@ export interface AvaliableDates {
 }
 
 export interface Listing {
-  owner: string;
+  owner?: string;
   description: string;
   datesForRent: AvaliableDates[];
   pricePerDay: number;
@@ -31,7 +31,7 @@ export interface Nft {
   contract?: RentContract;
   listing: Listing;
   specification: NftSpecification;
-  objectId: string;
+  objectId?: string;
 }
 
 export enum AvaliabilityStatus {

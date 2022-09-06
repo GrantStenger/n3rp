@@ -8,8 +8,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { mergeNftsWithMetadata } from "../lib/fetchNft";
 import { useAccount } from "wagmi";
-import upArrow from "../../../static/up-arrow.svg";
-import downArrow from "../../../static/down-arrow.svg";
+import upArrow from "../../../static/upArrow.svg";
+import downArrow from "../../../static/downArrow.svg";
 import PaginatedNFTs from "../components/PaginatedNFTsPanel";
 
 export const ExploreRentals = () => {
@@ -191,7 +191,7 @@ export const ExploreRentals = () => {
           <PaginatedNFTs
             queryTable={"Listing"}
             accountAddress={accountData?.address}
-            limitPerPage={8}
+            limitPerPage={9}
             limitPerRow="grid-cols-3 grid gap-4 w-full"
           />
         </div>

@@ -58,7 +58,12 @@ const PaginatedNFTs = ({
         if (typeof queryObj.queryKey !== "undefined" && typeof queryObj.queryValue !== "undefined") {
           query.equalTo(queryObj.queryKey, queryObj.queryValue);
         }
-        query.limit(queryObj.limitPerPage).skip(queryObj.limitPerPage * queryObj.skipPage);
+        if (typeof queryObj.limitPerPage !== "undefined") {
+          query.limit(queryObj.limitPerPage);
+        }
+        if (typeof queryObj.limitPerPage !== "undefined" && typeof queryObj.skipPage !== "undefined") {
+          query.skip(queryObj.limitPerPage * queryObj.skipPage);
+        }
         await query.find().then(nftListingsData => {
           // setNftListingsData(nftListingsData);
           const nftListings: Nft[] = nftListingsData.map(nft => {

@@ -41,16 +41,36 @@ const List = () => {
     },
   );
 
+  const checkUniqueNft = (nft: Nft) => {
+    const query = new Moralis.Query(Listing);
+    query.equalTo("nftSpecification.collection", nft.specification.collection);
+    query.equalTo("nftSpecification.id", nft.specification.id);
+    query.count().then(
+      (count:number) => {
+        if(count > 0) {
+          console.log("Non Unique");
+        } else {
+          console.log("Unique");
+          console.log("Can Saveeee");
+          const listing = Listing.create(nft);
+          listing.save().then(
+            (listing: any) => {
+              console.log("Save Successfull!!");
+            },
+            (e: any) => {
+              console.log(e);
+            },
+          );
+        }
+      },
+      (error) => {
+        console.log("Error Occurred");
+      }
+    )
+  }
+
   const submitListing = (nft: Nft) => {
-    const listing = Listing.create(nft);
-    listing.save().then(
-      (listing: any) => {
-        console.log("Save Successfull!!");
-      },
-      (e: any) => {
-        console.log(e);
-      },
-    );
+    checkUniqueNft(nft);
   };
 
   const { handleSubmit, handleChange, values, touched } = useFormik({
@@ -86,6 +106,7 @@ const List = () => {
         const NftsWithMetadata = await mergeNftsWithMetadata([
           {
             listing: {
+              owner: accountData?.address,
               description: values.description,
               datesForRent: [],
               pricePerDay: values.pricePerDay,
