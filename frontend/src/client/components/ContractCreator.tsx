@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
-import { Formik, Field, useFormik, useFormikContext } from 'formik';
+import { Formik, Field, useFormik, useFormikContext } from "formik";
 import { getNFTs, getNFTMetadata } from "../lib/web3";
 import { GetNftMetadataResponse } from "@alch/alchemy-web3";
 import Spinner from "./Spinner";
@@ -22,18 +22,9 @@ const useNFTs = (ownerAddr?: string) => {
   }, [ownerAddr]);
 
   return [nfts, loading];
-}
+};
 
-const Input = ({
-  type = 'text',
-  label,
-  name,
-  ...props
-} : {
-  type: string,
-  label: string,
-  name: string,
-}) => {
+const Input = ({ type = "text", label, name, ...props }: { type: string; label: string; name: string }) => {
   return (
     <div className="relative z-0 mb-6 w-full group">
       <Field
@@ -45,17 +36,16 @@ const Input = ({
       />
       <label
         htmlFor={name}
-        className="absolute text-sm text-slate-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-slate-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
+        className="absolute text-sm text-slate-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-slate-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+      >
         {label}
       </label>
     </div>
-  )
-}
+  );
+};
 
 const NFTDisplay = ({ metadata }: { metadata: GetNftMetadataResponse }) => {
-  const img = metadata?.media && metadata.media.length > 0 
-    ? metadata.media[0].uri?.gateway 
-    : null;
+  const img = metadata?.media && metadata.media.length > 0 ? metadata.media[0].uri?.gateway : null;
   return (
     <div className="flex flex-row flex-wrap">
       {img && <img src={img} className="w-32 h-32 mr-4" />}
@@ -71,39 +61,36 @@ const NFTDisplay = ({ metadata }: { metadata: GetNftMetadataResponse }) => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const SelectNFTByAddress = () => {
   const { values, setFieldValue } = useFormikContext<any>(); // fixme
   const [loadingMetadata, setLoadingMetadata] = useState(false);
-  
+
   const lookupMetadata = useMemo(() => {
     return () => {
       setLoadingMetadata(true);
-      getNFTMetadata(
-        values.contractAddr as string,
-        values.tokenId as string,
-      ).then((metadata) => {
-        console.log("metadata", metadata)
-        setFieldValue("_metadata", metadata)
-      }).finally(() => {
-        setLoadingMetadata(false);
-      })
-    }
-  }, [values.contractAddr, values.tokenId])
+      getNFTMetadata(values.contractAddr as string, values.tokenId as string)
+        .then(metadata => {
+          console.log("metadata", metadata);
+          setFieldValue("_metadata", metadata);
+        })
+        .finally(() => {
+          setLoadingMetadata(false);
+        });
+    };
+  }, [values.contractAddr, values.tokenId]);
 
   const reset = useMemo(() => {
     return () => {
       setFieldValue("_metadata", null);
     };
-  }, [])
+  }, []);
 
   return values._metadata ? (
     <>
-      <NFTDisplay
-        metadata={values._metadata as GetNftMetadataResponse}
-      />
+      <NFTDisplay metadata={values._metadata as GetNftMetadataResponse} />
       <div className="space-x-2">
         <button className={`_button`} onClick={reset}>
           Borrow this NFT
@@ -120,16 +107,8 @@ const SelectNFTByAddress = () => {
   ) : (
     <div className="space-y-4">
       <div className="pt-4">
-        <Input
-          type="text"
-          name="contractAddr"
-          label="Contract Address"
-        />
-        <Input
-          type="text"
-          name="tokenId"
-          label="Token ID"
-        />
+        <Input type="text" name="contractAddr" label="Contract Address" />
+        <Input type="text" name="tokenId" label="Token ID" />
       </div>
       <div>
         <button className={`_button ${false ? `` : `_disabled`}`} onClick={lookupMetadata}>
@@ -137,12 +116,12 @@ const SelectNFTByAddress = () => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export const ContractCreator = () => {
   const { data: accountData } = useAccount();
-  const { data: ensName } = useEnsName({ address: accountData?.address })
+  const { data: ensName } = useEnsName({ address: accountData?.address });
   const { data: ensAvatar } = useEnsAvatar({ addressOrName: accountData?.address });
   const { connect, connectors, error, isConnecting, pendingConnector } = useConnect();
   const { disconnect } = useDisconnect();
@@ -151,34 +130,36 @@ export const ContractCreator = () => {
     <Formik
       initialValues={{
         mode: null,
-        contractAddr: '0xa755a670aaf1fecef2bea56115e65e03f7722a79',
-        tokenId: '',
+        contractAddr: "0xa755a670aaf1fecef2bea56115e65e03f7722a79",
+        tokenId: "",
       }}
-      onSubmit={() => { console.log('Submitted'); }}
+      onSubmit={() => {
+        console.log("Submitted");
+      }}
     >
-      {(f) => (
+      {f => (
         <div className="container w-full py-8 space-y-6">
           <h1 className="text-4xl font-bold">Create Contract</h1>
           {/* Module #1: Connect Wallet */}
           <div className={`_card max-w-120 space-y-4`}>
-            {accountData ? (  
+            {accountData ? (
               <>
                 <div>
                   {ensName && <img src={ensAvatar!} alt="ENS Avatar" />}
-                  <div>Connected to <span className="font-bold">{accountData.connector?.name}</span></div>
                   <div>
-                    {ensName
-                      ? `${ensName} (${accountData.address})`
-                      : accountData.address}
+                    Connected to <span className="font-bold">{accountData.connector?.name}</span>
                   </div>
+                  <div>{ensName ? `${ensName} (${accountData.address})` : accountData.address}</div>
                 </div>
-                <button onClick={() => disconnect()} className="_button">Disconnect</button>
+                <button onClick={() => disconnect()} className="_button">
+                  Disconnect
+                </button>
               </>
             ) : (
               <>
                 <h2 className="text-xl font-bold">Select a wallet</h2>
                 <div className="space-y-2">
-                  {connectors.map((connector) => (
+                  {connectors.map(connector => (
                     <button
                       disabled={!connector.ready}
                       key={connector.id}
@@ -186,10 +167,10 @@ export const ContractCreator = () => {
                       className="_button block"
                     >
                       {connector.name}
-                      {!connector.ready && ' (unsupported)'}
+                      {!connector.ready && " (unsupported)"}
                     </button>
                   ))}
-                  {error && <div>{error?.message ?? 'Failed to connect'}</div>}
+                  {error && <div>{error?.message ?? "Failed to connect"}</div>}
                 </div>
               </>
             )}
@@ -200,14 +181,14 @@ export const ContractCreator = () => {
               <h2 className="text-xl font-bold">I want to...</h2>
               <div className="space-x-2">
                 <button
-                  className={`_button ${f.values.mode === "LEND" ? "_selected" : ''}`}
+                  className={`_button ${f.values.mode === "LEND" ? "_selected" : ""}`}
                   disabled={Boolean(f.values.mode && f.values.mode !== "LEND")}
                   onClick={() => f.setFieldValue("mode", f.values.mode ? null : "LEND")}
                 >
                   {f.values.mode === "LEND" ? `✓ ` : null}Lend
                 </button>
                 <button
-                  className={`_button ${f.values.mode === "BORROW" ? "_selected" : ''}`}
+                  className={`_button ${f.values.mode === "BORROW" ? "_selected" : ""}`}
                   disabled={Boolean(f.values.mode && f.values.mode !== "BORROW")}
                   onClick={() => f.setFieldValue("mode", f.values.mode ? null : "BORROW")}
                 >
@@ -227,4 +208,3 @@ export const ContractCreator = () => {
     </Formik>
   );
 };
-

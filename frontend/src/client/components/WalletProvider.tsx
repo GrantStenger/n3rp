@@ -1,7 +1,7 @@
 import React, { FC } from "react";
-import { Provider, createClient, chain, defaultChains } from "wagmi";
-import { InjectedConnector } from 'wagmi/connectors/injected'
-import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
+import { Provider, createClient, chain } from "wagmi";
+import { InjectedConnector } from "wagmi/connectors/injected";
+import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
 
 // API key for Ethereum node
 // Two popular services are Infura (infura.io) and Alchemy (alchemy.com)
@@ -10,12 +10,10 @@ import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 const infuraId = process.env.INFURA_ID;
 
 // Chains for connectors to support
-const chains = defaultChains
+const chains = [chain.mainnet];
 
-const connectors = ({ chainId } : { chainId?: number }) => {
-  const rpcUrl =
-    chains.find((x) => x.id === chainId)?.rpcUrls?.[0] ??
-    chain.mainnet.rpcUrls[0]
+const connectors = ({ chainId }: { chainId?: number }) => {
+  const rpcUrl = chains.find(x => x.id === chainId)?.rpcUrls?.[0] ?? chain.mainnet.rpcUrls[0];
   return [
     // Injected (metamask, etc)
     new InjectedConnector({
@@ -40,18 +38,14 @@ const connectors = ({ chainId } : { chainId?: number }) => {
       },
     }),
     */
-  ]
-}
+  ];
+};
 
 const client = createClient({
   autoConnect: true,
-  connectors: connectors
+  connectors: connectors,
 });
 
-const WalletProvider : FC = ({ children }) => (
-  <Provider client={client}>
-    {children}
-  </Provider>
-);
+const WalletProvider: FC = ({ children }) => <Provider client={client}>{children}</Provider>;
 
 export default WalletProvider;

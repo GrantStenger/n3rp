@@ -1,7 +1,5 @@
-
 import { getNFTMetadata } from "./web3";
 import { NftWithMetadata, Nft, AvaliabilityStatus, Attribute } from "../../../types/nftTypes.js";
-
 
 const getMetadataForAllNfts = async (nfts: Nft[]) => {
   const awaitables = [];
