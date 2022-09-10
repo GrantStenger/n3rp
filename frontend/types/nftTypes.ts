@@ -6,6 +6,8 @@ export interface NftSpecification {
 }
 
 export interface RentContract {
+  objectId?: string;
+  contractAddress: string;
   lenderAddress: string;
   borrowerAddress: string;
   startDate: Date;
@@ -28,7 +30,7 @@ export interface Listing {
 }
 
 export interface Nft {
-  contract?: RentContract;
+  contracts?: (RentContract)[];
   listing: Listing;
   specification: NftSpecification;
   objectId?: string;

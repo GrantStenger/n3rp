@@ -36,6 +36,7 @@ const List = () => {
         const listing = new Listing();
         listing.set("listing", nft.listing);
         listing.set("nftSpecification", nft.specification);
+        listing.set("active", true);
         return listing;
       },
     },
@@ -45,15 +46,26 @@ const List = () => {
     const query = new Moralis.Query(Listing);
     query.equalTo("nftSpecification.collection", nft.specification.collection);
     query.equalTo("nftSpecification.id", nft.specification.id);
-    query.count().then(
-      (count:number) => {
-        if(count > 0) {
-          console.log("Non Unique");
+    query.first().then(
+      (listing) => {
+        if(typeof(listing) !== "undefined") {
+          if(!listing.get("active")) {
+            listing.set("listing", nft.listing);
+            listing.set("active", true);
+            listing.save().then(
+              (listing: any) => {
+                console.log("Save Successfull!!");
+              },
+              (e: any) => {
+                console.log(e);
+              },
+            );
+          }
         } else {
           console.log("Unique");
           console.log("Can Saveeee");
-          const listing = Listing.create(nft);
-          listing.save().then(
+          const newListing = Listing.create(nft);
+          newListing.save().then(
             (listing: any) => {
               console.log("Save Successfull!!");
             },
@@ -83,6 +95,7 @@ const List = () => {
     },
     onSubmit: values => {
       if (isConnected && accountData?.address) {
+        console.log("Address: ", accountData?.address);
         submitListing({
           listing: {
             owner: accountData?.address,
@@ -124,6 +137,8 @@ const List = () => {
         console.log("BAD NFT");
         setValidNft(false);
       }
+    } else {
+      setValidNft(false);
     }
   };
 
@@ -210,7 +225,6 @@ const List = () => {
                   onChange={handleChange}
                   value={values.pricePerDay}
                   className={inputStyle}
-                  required
                 ></input>
               </FormSection>
               <FormSection>
@@ -224,7 +238,6 @@ const List = () => {
                   onChange={handleChange}
                   value={values.collateral}
                   className={inputStyle}
-                  required
                 ></input>
               </FormSection>
               {/* <FormSection center>
@@ -235,13 +248,24 @@ const List = () => {
                 <label className={labelStyle}>Collateral Payback</label>
                 <input type="text" className={inputStyle}></input>
               </FormSection> */}
-              <button
-                className={`${(validNft ? "bg-indigo-800" : "cursor-not-allowed bg-gray-500") + buttonBaseStyle}`}
-                disabled={!validNft}
-                type="submit"
-              >
-                List my Rental!
-              </button>
+              {
+                isConnected ? ( 
+                <button
+                  className={`${(validNft ? "bg-indigo-800" : "cursor-not-allowed bg-gray-500") + buttonBaseStyle}`}
+                  disabled={!validNft}
+                  type="submit"
+                >
+                  List my Rental!
+                </button>) : (
+                  <button
+                  className={`${(validNft ? "bg-indigo-800" : "cursor-not-allowed bg-gray-500") + buttonBaseStyle}`}
+                  disabled={!validNft}
+                  type="submit"
+                >
+                  Connect To Wallet
+                </button>
+                )
+              }
             </form>
           </div>
         </div>

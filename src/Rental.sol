@@ -22,7 +22,7 @@ contract Rental {
     /// @notice The collection of the NFT to lend
     ERC721 public immutable nftCollection;
 
-    /// @notice The the id of the NFT within the collection
+    /// @notice The id of the NFT within the collection
     uint256 public immutable nftId;
 
     /// @notice The expiration time of the rental
@@ -38,7 +38,7 @@ contract Rental {
     /// @notice The amount of time the collateral will be linearly paid out over if the NFT isn't returned on time
     uint256 public immutable collateralPayoutPeriod;
 
-    /// @notice The contract deployoor specifies a period by which the assets must be deposited else the contract is voided
+    /// @notice The contract deployer specifies a period by which the assets must be deposited else the contract is voided
     uint256 public immutable nullificationTime;
 
     /// -------------------------------------------- ///

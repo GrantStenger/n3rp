@@ -28,8 +28,6 @@ export const mergeNftsWithMetadata = async (nfts: Nft[]) => {
   for (let i = 0; i < nfts.length; i++) {
     const metadata = metadatas[i].metadata!;
 
-    console.log("MEtat data is: ", metadata);
-
     let attributes: Attribute[] = [];
     if (metadata.attributes) {
       attributes = metadata.attributes.map(attribute => {
