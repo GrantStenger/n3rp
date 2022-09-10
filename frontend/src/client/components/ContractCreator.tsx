@@ -73,7 +73,6 @@ const SelectNFTByAddress = () => {
       setLoadingMetadata(true);
       getNFTMetadata(values.contractAddr as string, values.tokenId as string)
         .then(metadata => {
-          console.log("metadata", metadata);
           setFieldValue("_metadata", metadata);
         })
         .finally(() => {

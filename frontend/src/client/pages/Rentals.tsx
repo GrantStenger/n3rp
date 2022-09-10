@@ -1,10 +1,10 @@
 import React,{ useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { Navbar } from "../components/Navbar/Navbar";
 import { Footer } from "../components/Footer";
 import { useAccount, useConnect } from "wagmi";
 import PaginatedNFTs from "../components/PaginatedNFTsPanel";
 import { QueryFilter, QueryFilterTypes } from "../../../types/queryTypes.js";
+import { PageTypes } from "../../../types/types";
 
 const Rentals = () => {
   const { data: accountData } = useAccount();
@@ -31,8 +31,6 @@ const Rentals = () => {
 };
 
 const MyListingsView = ({ accountAddress }: { accountAddress: string }) => {
-  console.log("Loaded My Listing View!: ", accountAddress);
-
   const queryFilterList:(QueryFilter)[] = [
     {
       filterType: QueryFilterTypes.EQUAL_TO,
@@ -53,6 +51,7 @@ const MyListingsView = ({ accountAddress }: { accountAddress: string }) => {
           limitPerPage={8}
           limitPerRow="grid-cols-4 grid gap-4 w-full"
           queryFilterList={queryFilterList}
+          pageType={PageTypes.MyListing}
         />
       </div>
     </div>
@@ -60,6 +59,7 @@ const MyListingsView = ({ accountAddress }: { accountAddress: string }) => {
 };
 
 const MyRentalsView = ({ accountAddress }: { accountAddress: string }) => {
+
   return (
     <div className="m-20 space-y-6">
       <h1 className="text-4xl font-bold border-b-2 py-2">My Rentals</h1>
@@ -73,6 +73,7 @@ const MyRentalsView = ({ accountAddress }: { accountAddress: string }) => {
           limitPerRow="grid-cols-4 grid gap-4 w-full"
           includes={["listing"]}
           queryFilterList={[]}
+          pageType={PageTypes.Rental}
         />
       </div>
       {/* <p>You haven't rented any NFTs!</p>

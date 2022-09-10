@@ -11,17 +11,19 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import upArrow from "../../../static/upArrow.svg";
 import downArrow from "../../../static/downArrow.svg";
+import { PageTypes } from "../../../types/types.js";
 
 const PaginatedNFTs = ({
   queryTable,
   queryKey,
   queryValue,
-  accountAddress = "",
+  accountAddress,
   limitPerPage = 8,
   limitPerRow = "grid-cols-4 grid gap-4 w-full",
   includes = [],
   showFilters = [],
   queryFilterList = [],
+  pageType,
 }: {
   queryTable: string;
   queryKey?: string;
@@ -32,6 +34,7 @@ const PaginatedNFTs = ({
   includes?: (string)[];
   showFilters?: (Filter)[];
   queryFilterList?: (QueryFilter)[];
+  pageType: PageTypes;
 }) => {
   const [loading, setLoading] = useState(true);
   const { Moralis, isInitialized } = useMoralis();
@@ -58,7 +61,6 @@ const PaginatedNFTs = ({
   });
 
   useEffect(() => {
-    console.log("PUssy Gang");
     setQueryObj({
       table: queryTable,
       queryKey: queryKey,
@@ -90,7 +92,6 @@ const PaginatedNFTs = ({
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log("Account is Balle: ", accountAddress);
       setSelectedNft(null); 
       setLoading(true);
       try {
@@ -141,21 +142,25 @@ const PaginatedNFTs = ({
           }
         }
 
-        await query.find().then(nftListingsData => {
+        query.find().then(nftListingsData => {
           const nftListings: Nft[] = nftListingsData.map(nft => {
             if(queryObj.table  === "Rental") {
-              console.log("NFt LIstings: ", nft.get("listing"));
               nft = nft.get("listing");
             }
             return {
               listing: nft.attributes.listing,
               specification: nft.attributes.nftSpecification,
               objectId: nft.id,
+              rental: {
+                startDate: nft.get("startDate"),
+                dueDate: nft.get("dueDate"),
+                borrowerAddress: nft.get("borrowerAddress"),
+                rentalPayment: nft.get("rentalPayment"),
+              }
             };
           });
           mergeNftsWithMetadata(nftListings).then(nftsWithMetadata => {
             setNfts(nftsWithMetadata);
-            console.log("NFT With Metadata: ", nftsWithMetadata);
             setLoading(false);
           });
         });
@@ -164,7 +169,6 @@ const PaginatedNFTs = ({
       }
     };
     if(isInitialized) {
-      console.log("Getting Called!!: ", queryFilterList);
       fetchData();
     }
   }, [queryObj, isInitialized]);
@@ -193,6 +197,19 @@ const PaginatedNFTs = ({
       }
     }
 
+    const holidays = [
+      new Date(2022, 10, 14),
+      new Date(2022, 11, 11),
+      new Date(2022, 10, 28),
+      new Date(2022, 12, 25),
+      new Date(2022, 1, 1),
+      new Date(2022, 1, 20),
+      new Date(2022, 2, 17),
+      new Date(2022, 5, 25),
+      new Date(2022, 7, 3),
+      new Date(2022, 9, 7)
+    ];
+
     return (
       <div className="rounded-b-lg h-full border border-gray-100 bg-gray-50">
         <div className="flex flex-col items-center py-4">
@@ -206,6 +223,7 @@ const PaginatedNFTs = ({
             minDate={new Date()}
             showDisabledMonthNavigation
             inline
+            excludeDates={holidays}
           />
           {startDate && endDate && (
             <div className="flex flex-row">
@@ -318,13 +336,13 @@ const PaginatedNFTs = ({
           <div>
             {selectedNft && (
               <Popup closeHandler={() => setSelectedNft(null)}>
-                <RentDetails nft={selectedNft} accountAddress={accountAddress} />
+                <RentDetails nft={selectedNft} accountAddress={accountAddress} pageType={pageType}/>
               </Popup>
             )}
             <div className={`${limitPerRow}`}>
               {nfts.map((nft, index) => (
                 <div onClick={() => setSelectedNft(nft)} key={index}>
-                  <ListingPanel nft={nft} />
+                  <ListingPanel nft={nft} pageType={pageType}/>
                 </div>
               ))}
             </div>

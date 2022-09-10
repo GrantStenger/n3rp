@@ -1,16 +1,20 @@
 import React, { useState } from "react";
 import { NftWithMetadata, Avaliability, AvaliabilityStatus } from "../../../types/nftTypes.js";
+import { PageTypes } from "../../../types/types.js";
 import upArrow from "../../../static/upArrow.svg";
 import downArrow from "../../../static/downArrow.svg";
+import imageLogo from "../../../static/image.png";
 
 export const ListingPanel = ({
   nft,
   pureNft = false,
   desc = true,
+  pageType
 }: {
   nft: NftWithMetadata | null;
   pureNft?: boolean;
   desc?: boolean;
+  pageType: PageTypes
 }) => {
   const [viewPropertyTab, setViewPropertyTab] = useState(false);
 
@@ -58,6 +62,10 @@ export const ListingPanel = ({
               </div>
             </div>
           )}
+          <div className="shadow-lg rounded-lg flex flex-row space-x-2 py-4 bg-gray-50 px-4 justify-start border border-gray-200 my-2">
+            <h3 className="flex-1 text-md font-semibold">Price per day: {nft.nft.listing.pricePerDay} ETH</h3>
+            <h3 className="text-md font-semibold">Collateral: {nft.nft.listing.collateral} ETH</h3>
+          </div>
           {pureNft && (
             <div className="border border-gray-200 rounded-lg shadow-md mt-2">
               <div
@@ -89,12 +97,8 @@ export const ListingPanel = ({
           )}
         </div>
       ) : (
-        <div className="rounded-lg bg-white shadow h-[500px]">
-          <div>
-            <div className="w-full flex items-center pb-2">
-              <div className="flex-grow pl-1"></div>
-            </div>
-          </div>
+        <div className="flex shadow-lg rounded-lg bg-gray-100 shadow h-[500px] items-center justify-center">
+          <img src={imageLogo} className="w-full h-10 w-10" alt="logo" />
         </div>
       )}
     </>

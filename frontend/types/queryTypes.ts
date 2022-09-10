@@ -33,5 +33,6 @@ export enum QueryFilterTypes {
   GREATER_THAN = "greaterThan",
   GREATER_THAN_OR_EQUAL_TO = "greaterThanOrEqualTo",
   CONTAINED_IN = "containedIn",
-  NOT_CONTAINED_IN = "notContainedIn"
+  NOT_CONTAINED_IN = "notContainedIn",
+  DISTINCT="distinct"
 }

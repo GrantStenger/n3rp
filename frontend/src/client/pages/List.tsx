@@ -2,7 +2,6 @@ import { useFormik } from "formik";
 import React, { useState } from "react";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar/Navbar";
-import { DayPicker } from "react-day-picker";
 import { ListingPanel } from "../components/ListingPanel";
 import { mergeNftsWithMetadata } from "../lib/fetchNft";
 import { useMoralis } from "react-moralis";
@@ -37,6 +36,7 @@ const List = () => {
         listing.set("listing", nft.listing);
         listing.set("nftSpecification", nft.specification);
         listing.set("active", true);
+        listing.set("rental", false);
         return listing;
       },
     },
@@ -62,12 +62,10 @@ const List = () => {
             );
           }
         } else {
-          console.log("Unique");
-          console.log("Can Saveeee");
           const newListing = Listing.create(nft);
           newListing.save().then(
             (listing: any) => {
-              console.log("Save Successfull!!");
+              console.log("Save Successfull!!: ", listing);
             },
             (e: any) => {
               console.log(e);
@@ -95,7 +93,6 @@ const List = () => {
     },
     onSubmit: values => {
       if (isConnected && accountData?.address) {
-        console.log("Address: ", accountData?.address);
         submitListing({
           listing: {
             owner: accountData?.address,
@@ -152,7 +149,7 @@ const List = () => {
           <ListingPanel nft={nft} pureNft={true} />
         </div>
         <div className="flex-1 mx-4">
-          <div className="shadow-md rounded-lg border border-gry-200 w-content">
+          <div className="shadow-md rounded-lg border border-gray-200 w-content">
             <div className="flex flex-row font-bold text-slate-800 text-xl py-3 px-6 border-b border-gray-200">
               <span className="flex-1">List a Rental</span>
             </div>

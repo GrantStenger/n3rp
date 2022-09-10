@@ -1,44 +1,52 @@
 import React, { useEffect, useState } from "react";
 import { useAccount, useConnect } from "wagmi";
 import { Filter, FilterTypes, QueryFilter, QueryFilterTypes } from "../../../types/queryTypes.js";
+import { PageTypes } from "../../../types/types.js";
 import PaginatedNFTs from "../components/PaginatedNFTsPanel";
 
 export const ExploreRentals = () => {
   const { data: accountData } = useAccount();
+  const { isConnected, isDisconnected } = useConnect();
   const [queryFilterList, setQueryFilterList] = useState<QueryFilter[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    console.log("Account is:", accountData?.address);
-    setQueryFilterList([
-      {
-        filterType: QueryFilterTypes.EQUAL_TO,
-        filterKey: "active",
-        filterValue: true,
-      },
-      {
-        filterType: QueryFilterTypes.NOT_EQUAL_TO,
-        filterKey: "listing.owner",
-        filterValue: accountData?.address,
-      },
-    ]);
-    setLoading(false);
+    if((isConnected && typeof(accountData) !== "undefined") || (isDisconnected)) {
+      setLoading(true);
+      setQueryFilterList([
+        {
+          filterType: QueryFilterTypes.EQUAL_TO,
+          filterKey: "active",
+          filterValue: true,
+        },
+        {
+          filterType: QueryFilterTypes.NOT_EQUAL_TO,
+          filterKey: "listing.owner",
+          filterValue: accountData?.address,
+        },
+        {
+          filterType: QueryFilterTypes.NOT_EQUAL_TO,
+          filterKey: "rental",
+          filterValue: true,
+        },
+      ]);
+      setLoading(false);
+    }
   }, [accountData])
 
   const sideFiltersList:(Filter)[] = [
     { 
       filterKey: FilterTypes.DATE_FILTER,
       default: true,
-      active: true,
+      active: false,
     },
     {
       filterKey: FilterTypes.COST_FILTER,
-      default: false,
+      default: true,
       active: true,
     }
   ];
-
+  
   return (
     <>
     { !loading &&
@@ -51,6 +59,7 @@ export const ExploreRentals = () => {
             limitPerRow="grid-cols-3 grid gap-4 w-full"
             showFilters={sideFiltersList}
             queryFilterList={queryFilterList}
+            pageType={PageTypes.Explore}
           />
         </div>
       </div>  
