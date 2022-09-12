@@ -155,6 +155,16 @@ export const RentDetails = ({
       const nullificationPeriod = new Date(collateralPayoutPeriod);
       nullificationPeriod.setDate(nullificationPeriod.getDate() + 1);
 
+      console.log(rental.attributes.lenderAddress,
+        rental.attributes.borrowerAddress,
+        nft.nft.specification.collection,
+        nft.nft.specification.id,
+        Date.parse(rental.attributes.dueDate),
+        ethers.utils.parseEther(rental.attributes.rentalPayment.toString()),
+        ethers.utils.parseEther(nft.nft.listing.collateral.toString()),
+        Date.parse(collateralPayoutPeriod.toString()),
+        Date.parse(nullificationPeriod.toString()));
+
       try {
         const contract = await factory.deploy(
           rental.attributes.lenderAddress,
@@ -195,6 +205,7 @@ export const RentDetails = ({
           },
         );
       } catch (e) {
+        console.log(e);
         setButtonloading(false);
         alert("Some error occurred!!");
       }
@@ -240,12 +251,6 @@ export const RentDetails = ({
 
     try {
       const query = new Moralis.Query(queryObj.table);
-      if (typeof queryObj.queryKey !== "undefined" && typeof queryObj.queryValue !== "undefined") {
-        query.equalTo(queryObj.queryKey, queryObj.queryValue);
-      }
-      if (typeof queryObj.limitPerPage !== "undefined" && typeof queryObj.skipPage !== "undefined") {
-        query.limit(queryObj.limitPerPage).skip(queryObj.limitPerPage * queryObj.skipPage);
-      }
       if (typeof nft.nft.objectId !== "undefined") {
         await query.get(nft.nft.objectId).then(listing => {
           if (typeof listing !== "undefined") {
@@ -262,7 +267,7 @@ export const RentDetails = ({
                   rentalObj.save().then(
                     () => {
                       console.log("Deleted Successfully!!");
-                      alert("Listing Cancelled!!");
+                      alert("Listing Deleted!!");
                     }
                   )
                 }
@@ -408,7 +413,7 @@ export const RentDetails = ({
               ) : (
                 typeof(nft.nft.rentalObj) !== 'undefined' ? (
                   <button
-                    onClick={() => cancelListing(nft)}
+                    onClick={() => {}}
                     className="mt-2 w-full bg-indigo-800 hover:bg-indigo-700 text-xl text-white font-bold py-3 px-4 rounded-md"
                   >
                   Deposit NFT
