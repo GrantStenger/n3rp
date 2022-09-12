@@ -117,6 +117,7 @@ const List = () => {
             collection: values.collection,
             id: values.id,
           },
+          rental: false
         });
       }
     },
@@ -138,6 +139,7 @@ const List = () => {
               collection: values.collection,
               id: values.id,
             },
+            rental: false,
           },
         ]);
         setNft(NftsWithMetadata[0]);

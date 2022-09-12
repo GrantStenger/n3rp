@@ -34,7 +34,7 @@ export interface Nft {
   specification: NftSpecification;
   objectId?: string;
   rental: boolean;
-  rentalObj?: RentContract;
+  rentalObj?: any;
 }
 
 export enum AvaliabilityStatus {

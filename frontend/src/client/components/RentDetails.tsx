@@ -11,7 +11,6 @@ import { useSigner } from "wagmi";
 import metadata from "../../abis/rental.json";
 import upArrow from "../../../static/upArrow.svg";
 import downArrow from "../../../static/downArrow.svg";
-import { useContractReads } from 'wagmi'
 
 function checkOwner(accountAddress: string, owner?: string): boolean {
   return accountAddress !== owner;
@@ -145,58 +144,60 @@ export const RentDetails = ({
   }
 
   async function rentTransaction(rental: any, listing: any) {
-    setButtonloading(true);
+    if(signer !== null) {
+      setButtonloading(true);
 
-    const factory = new ethers.ContractFactory(metadata.abi, metadata.bytecode.object, signer);
+      const factory = new ethers.ContractFactory(metadata.abi, metadata.bytecode.object, signer);
 
-    const collateralPayoutPeriod = new Date(rental.attributes.dueDate);
-    collateralPayoutPeriod.setDate(collateralPayoutPeriod.getDate() + 5);
+      const collateralPayoutPeriod = new Date(rental.attributes.dueDate);
+      collateralPayoutPeriod.setDate(collateralPayoutPeriod.getDate() + 5);
 
-    const nullificationPeriod = new Date(collateralPayoutPeriod);
-    nullificationPeriod.setDate(nullificationPeriod.getDate() + 1);
+      const nullificationPeriod = new Date(collateralPayoutPeriod);
+      nullificationPeriod.setDate(nullificationPeriod.getDate() + 1);
 
-    try {
-      const contract = await factory.deploy(
-        rental.attributes.lenderAddress,
-        rental.attributes.borrowerAddress,
-        nft.nft.specification.collection,
-        nft.nft.specification.id,
-        Date.parse(rental.attributes.dueDate),
-        ethers.utils.parseEther(rental.attributes.rentalPayment.toString()),
-        ethers.utils.parseEther(nft.nft.listing.collateral.toString()),
-        Date.parse(collateralPayoutPeriod),
-        Date.parse(nullificationPeriod),
-      );
+      try {
+        const contract = await factory.deploy(
+          rental.attributes.lenderAddress,
+          rental.attributes.borrowerAddress,
+          nft.nft.specification.collection,
+          nft.nft.specification.id,
+          Date.parse(rental.attributes.dueDate),
+          ethers.utils.parseEther(rental.attributes.rentalPayment.toString()),
+          ethers.utils.parseEther(nft.nft.listing.collateral.toString()),
+          Date.parse(collateralPayoutPeriod.toString()),
+          Date.parse(nullificationPeriod.toString()),
+        );
 
-      await contract.deployed();
-      rental.set("contractAddress", contract.address);
-      rental.save().then(
-        (rental: any) => {
-          //Block Availability for below dates
-          const availability = Availability.create(startDate, endDate, listing, rental);
-          availability.save().then(
-            (availability: any) => {
-              listing.set("rental", true);
-              listing.set("rentalObj", rental);
-              listing.save();
-              console.log("Availability Save Successfull!!");
-              setButtonloading(false);
-              alert("Rent Successfull");
-            },
-            (e: any) => {
-              setButtonloading(false);
-              console.log(e);
-            },
-          );
-        },
-        (e: any) => {
-          setButtonloading(false);
-          console.log(e);
-        },
-      );
-    } catch (e) {
-      setButtonloading(false);
-      alert("Some error occurred!!");
+        await contract.deployed();
+        rental.set("contractAddress", contract.address);
+        rental.save().then(
+          (rental: any) => {
+            //Block Availability for below dates
+            const availability = Availability.create(startDate, endDate, listing, rental);
+            availability.save().then(
+              (availability: any) => {
+                listing.set("rental", true);
+                listing.set("rentalObj", rental);
+                listing.save();
+                console.log("Availability Save Successfull!!");
+                setButtonloading(false);
+                alert("Rent Successfull");
+              },
+              (e: any) => {
+                setButtonloading(false);
+                console.log(e);
+              },
+            );
+          },
+          (e: any) => {
+            setButtonloading(false);
+            console.log(e);
+          },
+        );
+      } catch (e) {
+        setButtonloading(false);
+        alert("Some error occurred!!");
+      }
     }
   }
 
