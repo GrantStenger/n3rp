@@ -1,7 +1,5 @@
-
 import { getNFTMetadata } from "./web3";
 import { NftWithMetadata, Nft, AvaliabilityStatus, Attribute } from "../../../types/nftTypes.js";
-
 
 const getMetadataForAllNfts = async (nfts: Nft[]) => {
   const awaitables = [];
@@ -41,7 +39,6 @@ export const mergeNftsWithMetadata = async (nfts: Nft[]) => {
     }
 
     let image = metadata.image!;
-
     if (image.startsWith("ipfs://")) {
       image = mapIpfsToUrl(image);
     }

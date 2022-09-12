@@ -1,7 +1,6 @@
 # N3RP Frontend
 
-***Built from [JonLuca](https://jonlu.ca/)'s [Vite Typescript SSR React boilerplate](https://github.com/jonluca/vite-typescript-ssr-react)***
-
+**_Built from [JonLuca](https://jonlu.ca/)'s [Vite Typescript SSR React boilerplate](https://github.com/jonluca/vite-typescript-ssr-react)_**
 
 ## Development
 

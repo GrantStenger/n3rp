@@ -1,18 +1,19 @@
 import { useFormik } from "formik";
 import React, { useState } from "react";
 import { Footer } from "../components/Footer";
-import { Navbar } from "../components/Navbar";
-import { DayPicker } from "react-day-picker";
+import { Navbar } from "../components/Navbar/Navbar";
 import { ListingPanel } from "../components/ListingPanel";
 import { mergeNftsWithMetadata } from "../lib/fetchNft";
 import { useMoralis } from "react-moralis";
 import { NftWithMetadata, Nft } from "../../../types/nftTypes.js";
+import { useAccount, useConnect } from "wagmi";
 
 import "react-day-picker/dist/style.css";
+import { PageTypes } from "../../../types/types";
 
-const buttonBaseStyle = "w-48 bg-indigo-800 text-white font-bold py-2 px-4 rounded-md";
-const inputStyle = "border-2 flex-grow border-slate-500 p-2 rounded-md";
-const labelStyle = "font-bold w-40";
+const buttonBaseStyle = " text-white font-semibold py-2 px-4 mt-4 rounded-md";
+const inputStyle = "border flex-grow border-slate-500 p-1 rounded-md";
+const labelStyle = "font-semibold w-32 text-sm";
 const FormSection: React.FC<{ center?: boolean }> = ({ center, children }) => {
   let centering = center ? "items-center" : "items-start";
   return <div className={`flex flex-row gap-4 ${centering} justify-between w-full`}>{children}</div>;
@@ -23,6 +24,9 @@ const List = () => {
   const { Moralis } = useMoralis();
   const [nft, setNft] = useState<NftWithMetadata | null>(null);
   const [validNft, setValidNft] = useState(false);
+  const { isConnected } = useConnect();
+  const [listingRental, setListingRental] = useState(false);
+  const { data: accountData } = useAccount();
 
   // A complex subclass of Moralis.Object
   const Listing = Moralis.Object.extend(
@@ -33,15 +37,61 @@ const List = () => {
         const listing = new Listing();
         listing.set("listing", nft.listing);
         listing.set("nftSpecification", nft.specification);
+        listing.set("active", true);
+        listing.set("rental", false);
+        listing.set("rentalObj", undefined);
         return listing;
       },
     },
   );
+
+  const checkUniqueNft = (nft: Nft) => {
+    const query = new Moralis.Query(Listing);
+    query.equalTo("nftSpecification.collection", nft.specification.collection);
+    query.equalTo("nftSpecification.id", nft.specification.id);
+    query.first().then(
+      listing => {
+        if (typeof listing !== "undefined") {
+          if (!listing.get("active")) {
+            console.log("Listing is: ", nft.listing);
+            listing.set("listing", nft.listing);
+            listing.set("active", true);
+            listing.save().then(
+              (listing: any) => {
+                console.log("Save Successfull!!");
+                alert("NFT is Listed!!");
+              },
+              (e: any) => {
+                console.log(e);
+              },
+            );
+          } else {
+            alert("NFT is already Listed!!");
+          }
+        } else {
+          const newListing = Listing.create(nft);
+          newListing.save().then(
+            (listing: any) => {
+              console.log("Save Successfull!!: ", listing);
+            },
+            (e: any) => {
+              console.log(e);
+            },
+          );
+          alert("NFT is Listed!!");
+        }
+        setListingRental(false);
+      },
+      error => {
+        console.log("Error Occurred");
+        setListingRental(false);
+        alert("NFT Listing Failed. Try Again!!");
+      },
+    );
+  };
+
   const submitListing = (nft: Nft) => {
-    const listing = Listing.create(nft);
-    listing.save().then((e: any) => {
-      console.log(e);
-    });
+    checkUniqueNft(nft);
   };
 
   const { handleSubmit, handleChange, values, touched } = useFormik({
@@ -53,18 +103,23 @@ const List = () => {
       collateral: 0,
     },
     onSubmit: values => {
-      submitListing({
-        listing: {
-          description: values.description,
-          datesForRent: [],
-          pricePerDay: values.pricePerDay,
-          collateral: values.collateral,
-        },
-        specification: {
-          collection: values.collection,
-          id: values.id,
-        },
-      });
+      if (isConnected && accountData?.address) {
+        setListingRental(true);
+        submitListing({
+          listing: {
+            owner: accountData?.address,
+            description: values.description,
+            datesForRent: [],
+            pricePerDay: values.pricePerDay,
+            collateral: values.collateral,
+          },
+          specification: {
+            collection: values.collection,
+            id: values.id,
+          },
+          rental: false
+        });
+      }
     },
   });
 
@@ -74,6 +129,7 @@ const List = () => {
         const NftsWithMetadata = await mergeNftsWithMetadata([
           {
             listing: {
+              owner: accountData?.address,
               description: values.description,
               datesForRent: [],
               pricePerDay: values.pricePerDay,
@@ -83,6 +139,7 @@ const List = () => {
               collection: values.collection,
               id: values.id,
             },
+            rental: false,
           },
         ]);
         setNft(NftsWithMetadata[0]);
@@ -91,112 +148,140 @@ const List = () => {
         console.log("BAD NFT");
         setValidNft(false);
       }
+    } else {
+      setValidNft(false);
     }
   };
 
   let buttonStyle = buttonBaseStyle;
 
-  if (validNft) {
-    buttonStyle += " hover:bg-indigo-700";
-  }
-
   return (
-    <div className="flex bg-white-100 items-center flex-col justify-between h-screen">
+    <div className="flex flex-col bg-white-100 items-center min-h-screen">
       <Navbar />
-      {nft && (
-        <div className="w-96">
-          <ListingPanel nft={nft} pureNft={true} />
+      <div className="flex-1 flex flex-row w-10/12 mt-10">
+        <div className="w-5/12">
+          <ListingPanel nft={nft} pureNft={true} pageType={PageTypes.List} />
         </div>
-      )}
-      <form onSubmit={handleSubmit} className="flex w-2/3 mr-auto p-8 flex-col gap-8">
-        <h1 className="font-extrabold text-slate-800 sm:text-5xl md:text-6xl">List a Rental</h1>
-        {/* <div className="flex flex-row">
-          <button className={`${buttonStyle} rounded-tr-none rounded-br-none`}>Connect Wallet</button>
-          <div className="flex items-center justify-center w-16 h-full border-2 border-indigo-800 rounded-tr-md rounded-br-md">
-            <input type="checkbox" className="w-4 h-4"></input>
+        <div className="flex-1 mx-4">
+          <div className="shadow-md rounded-lg border border-gray-200 w-content">
+            <div className="flex flex-row font-bold text-slate-800 text-xl py-3 px-6 border-b border-gray-200">
+              <span className="flex-1">List a Rental</span>
+            </div>
+            <form onSubmit={handleSubmit} className="bg-gray-50 flex flex-col  items-center p-6 gap-2 w-content">
+              {/* <div className="flex flex-row">
+                <button className={`${buttonStyle} rounded-tr-none rounded-br-none`}>Connect Wallet</button>
+                <div className="flex items-center justify-center w-16 h-full border-2 border-indigo-800 rounded-tr-md rounded-br-md">
+                  <input type="checkbox" className="w-4 h-4"></input>
+                </div>
+              </div>
+              <div className="flex flex-row">
+                <button className={`${buttonStyle} rounded-tr-none rounded-br-none`}>Select your NFT</button>
+                <div className="flex items-center justify-center w-16 h-full border-2 border-indigo-800 rounded-tr-md rounded-br-md">
+                  <input type="checkbox" className="w-4 h-4"></input>
+                </div>
+              </div> */}
+              <FormSection>
+                <label htmlFor="collection" className={labelStyle}>
+                  Collection Address
+                </label>
+                <input
+                  id="collection"
+                  name="collection"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.collection}
+                  className={`${inputStyle}`}
+                ></input>
+              </FormSection>
+              <FormSection>
+                <label htmlFor="id" className={labelStyle}>
+                  ID
+                </label>
+                <input
+                  id="id"
+                  name="id"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.id}
+                  className={`${inputStyle}`}
+                ></input>
+              </FormSection>
+              <FormSection>
+                <label htmlFor="description" className={labelStyle}>
+                  Listing Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  onChange={handleChange}
+                  value={values.description}
+                  className={`${inputStyle} h-40`}
+                ></textarea>
+              </FormSection>
+              {/* <Divider />
+              <FormSection center>
+                <label className={labelStyle}>Dates for Rental</label>
+                <DayPicker />
+                <DayPicker />
+              </FormSection>
+              <Divider /> */}
+              <FormSection center>
+                <label className={labelStyle}>Price per day</label>
+                <input
+                  id="pricePerDay"
+                  name="pricePerDay"
+                  type="number"
+                  step="any"
+                  min="0"
+                  onChange={handleChange}
+                  value={values.pricePerDay}
+                  className={inputStyle}
+                ></input>
+              </FormSection>
+              <FormSection>
+                <label className={labelStyle}>Collateral</label>
+                <input
+                  id="collateral"
+                  name="collateral"
+                  type="number"
+                  step="any"
+                  min="0"
+                  onChange={handleChange}
+                  value={values.collateral}
+                  className={inputStyle}
+                ></input>
+              </FormSection>
+              {/* <FormSection center>
+                <label className={labelStyle}>Grace Period (Days)</label>
+                <input type="text" className={inputStyle}></input>
+              </FormSection>
+              <FormSection center>
+                <label className={labelStyle}>Collateral Payback</label>
+                <input type="text" className={inputStyle}></input>
+              </FormSection> */}
+              {isConnected ? (
+                <button
+                  className={`${
+                    (validNft && !listingRental ? "bg-indigo-800" : "cursor-not-allowed bg-gray-500") + buttonBaseStyle
+                  }`}
+                  disabled={!validNft || listingRental}
+                  type="submit"
+                >
+                  {!listingRental ? "List my Rental!" : "Listing..."}
+                </button>
+              ) : (
+                <button
+                  className={`${(validNft ? "bg-indigo-800" : "cursor-not-allowed bg-gray-500") + buttonBaseStyle}`}
+                  disabled={!validNft}
+                  type="submit"
+                >
+                  Connect To Wallet
+                </button>
+              )}
+            </form>
           </div>
         </div>
-        <div className="flex flex-row">
-          <button className={`${buttonStyle} rounded-tr-none rounded-br-none`}>Select your NFT</button>
-          <div className="flex items-center justify-center w-16 h-full border-2 border-indigo-800 rounded-tr-md rounded-br-md">
-            <input type="checkbox" className="w-4 h-4"></input>
-          </div>
-        </div> */}
-        <FormSection>
-          <label htmlFor="collection" className={labelStyle}>
-            Collection Address & ID
-          </label>
-          <input
-            id="collection"
-            name="collection"
-            onBlur={handleBlur}
-            onChange={handleChange}
-            value={values.collection}
-            className={`${inputStyle}`}
-          ></input>
-          <input
-            id="id"
-            name="id"
-            onBlur={handleBlur}
-            onChange={handleChange}
-            value={values.id}
-            className={`${inputStyle}`}
-          ></input>
-        </FormSection>
-        <FormSection>
-          <label htmlFor="description" className={labelStyle}>
-            Listing Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            onChange={handleChange}
-            value={values.description}
-            className={`${inputStyle} h-48`}
-          ></textarea>
-        </FormSection>
-        {/* <Divider />
-        <FormSection center>
-          <label className={labelStyle}>Dates for Rental</label>
-          <DayPicker />
-          <DayPicker />
-        </FormSection>
-        <Divider /> */}
-        <FormSection center>
-          <label className={labelStyle}>Price & Collateral</label>
-          <input
-            id="pricePerDay"
-            name="pricePerDay"
-            type="number"
-            step="any"
-            min="0"
-            onChange={handleChange}
-            value={values.pricePerDay}
-            className={inputStyle}
-          ></input>
-          <input
-            id="collateral"
-            name="collateral"
-            type="number"
-            step="any"
-            min="0"
-            onChange={handleChange}
-            value={values.collateral}
-            className={inputStyle}
-          ></input>
-        </FormSection>
-        {/* <FormSection center>
-          <label className={labelStyle}>Grace Period (Days)</label>
-          <input type="text" className={inputStyle}></input>
-        </FormSection>
-        <FormSection center>
-          <label className={labelStyle}>Collateral Payback</label>
-          <input type="text" className={inputStyle}></input>
-        </FormSection> */}
-        <button className={buttonStyle} disabled={!validNft} type="submit">
-          List my Rental!
-        </button>
-      </form>
+      </div>
       <Footer />
     </div>
   );

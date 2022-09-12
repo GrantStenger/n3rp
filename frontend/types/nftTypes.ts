@@ -1,57 +1,62 @@
 // declare modules here
 
 export interface NftSpecification {
-    collection: string;
-    id: string;
+  collection: string;
+  id: string;
 }
 
 export interface RentContract {
-    lenderAddress: string;
-    borrowerAddress: string;
-    startDate: Date;
-    dueDate: Date
-    rentalPayment: number;
-    collateralPayoutPeriod: number;
+  objectId?: string;
+  contractAddress: string;
+  lenderAddress: string;
+  borrowerAddress: string;
+  startDate: Date;
+  dueDate: Date;
+  rentalPayment: number;
+  collateralPayoutPeriod: number;
 }
 
 export interface AvaliableDates {
-    startDate: Date;
-    endDate: Date;
+  startDate: Date;
+  endDate: Date;
 }
 
 export interface Listing {
-    description: string;
-    datesForRent: AvaliableDates[];
-    pricePerDay: number;
-    collateral: number;
+  owner?: string;
+  description: string;
+  datesForRent: AvaliableDates[];
+  pricePerDay: number;
+  collateral: number;
 }
 
 export interface Nft {
-    contract?: RentContract;
-    listing: Listing;
-    specification: NftSpecification;
+  listing: Listing;
+  specification: NftSpecification;
+  objectId?: string;
+  rental: boolean;
+  rentalObj?: any;
 }
 
 export enum AvaliabilityStatus {
-    Avaliabile,
-    Unavaliabile,
-    Rented,
-    Upcoming,
+  Avaliabile,
+  Unavaliabile,
+  Rented,
+  Upcoming,
 }
 export interface Avaliability {
-    status: AvaliabilityStatus;
-    AvaliabiltyDate?: Date;
+  status: AvaliabilityStatus;
+  AvaliabiltyDate?: Date;
 }
 
 export interface Attribute {
-    traitType: string,
-    value: string,
+  traitType: string;
+  value: string;
 }
 
 export interface NftWithMetadata {
-    nft: Nft;
-    name: string;
-    image: string;
-    avaliability: Avaliability;
-    attributes: Attribute[];
+  nft: Nft;
+  name: string;
+  image: string;
+  avaliability: Avaliability;
+  attributes: Attribute[];
 }

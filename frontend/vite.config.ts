@@ -1,13 +1,12 @@
 import { defineConfig } from "vite";
 import reactRefresh from "@vitejs/plugin-react-refresh";
 
-import builtins from 'rollup-plugin-node-builtins';
+import builtins from "rollup-plugin-node-builtins";
 
 const builtinsPlugin = builtins({
   crypto: true,
 });
-builtinsPlugin.name = 'builtins';
-
+builtinsPlugin.name = "builtins";
 
 export default defineConfig({
   plugins: [reactRefresh()],
@@ -21,7 +20,7 @@ export default defineConfig({
     },
   },
   define: {
-    'process.env': {},
+    "process.env": {},
     // 'global': {},
   },
   resolve: {
@@ -29,7 +28,7 @@ export default defineConfig({
       process: "process/browser",
       stream: "stream-browserify",
       zlib: "browserify-zlib",
-      util: 'util'
-    }
-  }
+      util: "util",
+    },
+  },
 });

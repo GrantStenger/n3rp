@@ -2,21 +2,26 @@
 <html lang="en">
   <head>
     <title>n3rp</title>
-    <link rel="icon" href="static/favicon.png">
+    <link rel="icon" href="static/favicon.png" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta content="width=device-width,initial-scale=1,maximum-scale=10,minimum-scale=.25,user-scalable=yes" name="viewport">
-    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <meta
+      content="width=device-width,initial-scale=1,maximum-scale=10,minimum-scale=.25,user-scalable=yes"
+      name="viewport"
+    />
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
   </head>
   <body>
-    <div id="app" style="height: 100%;width: 100%;"><!--app-html--></div>
+    <div id="app" style="height: 100%; width: 100%"><!--app-html--></div>
     <script type="module" src="/src/client/entry-client.tsx"></script>
-    <script>window.global = window;</script>
+    <script>
+      window.global = window;
+    </script>
     <script type="module">
       import { Buffer } from "buffer/"; // <-- no typo here ("/")
       import process from "process";
       import EventEmitter from "events";
-          
+
       window.Buffer = Buffer;
       window.process = process;
       window.EventEmitter = EventEmitter;

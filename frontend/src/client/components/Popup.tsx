@@ -11,7 +11,7 @@ export const Popup = ({ closeHandler, children }: { closeHandler: () => void; ch
         }
       }}
     >
-      <div className="bg-white shadow relative p-4">
+      <div className="rounded-lg bg-white shadow-lg relative p-4 h-5/6 w-9/12 overflow-scroll">
         <div
           className="absolute right-0 top-0 cursor-pointer p-3 text-xl"
           style={{ fontFamily: "Arial" }}
