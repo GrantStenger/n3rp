@@ -30,10 +30,11 @@ export interface Listing {
 }
 
 export interface Nft {
-  contracts?: (RentContract)[];
   listing: Listing;
   specification: NftSpecification;
   objectId?: string;
+  rental: boolean;
+  rentalObj?: RentContract;
 }
 
 export enum AvaliabilityStatus {

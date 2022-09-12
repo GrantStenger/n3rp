@@ -11,7 +11,7 @@ export const ExploreRentals = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if((isConnected && typeof(accountData) !== "undefined") || (isDisconnected)) {
+    if ((isConnected && typeof accountData !== "undefined") || isDisconnected) {
       setLoading(true);
       setQueryFilterList([
         {
@@ -28,14 +28,14 @@ export const ExploreRentals = () => {
           filterType: QueryFilterTypes.NOT_EQUAL_TO,
           filterKey: "rental",
           filterValue: true,
-        },
+        }
       ]);
       setLoading(false);
     }
-  }, [accountData])
+  }, [accountData]);
 
-  const sideFiltersList:(Filter)[] = [
-    { 
+  const sideFiltersList: Filter[] = [
+    {
       filterKey: FilterTypes.DATE_FILTER,
       default: true,
       active: false,
@@ -43,27 +43,27 @@ export const ExploreRentals = () => {
     {
       filterKey: FilterTypes.COST_FILTER,
       default: true,
-      active: true,
-    }
+      active: false,
+    },
   ];
-  
+
   return (
     <>
-    { !loading &&
-      <div className="flex-1 w-full h-full flex flex-row p-6">
-        <div className="h-full w-full">
-          <PaginatedNFTs
-            queryTable={"Listing"}
-            accountAddress={accountData?.address}
-            limitPerPage={9}
-            limitPerRow="grid-cols-3 grid gap-4 w-full"
-            showFilters={sideFiltersList}
-            queryFilterList={queryFilterList}
-            pageType={PageTypes.Explore}
-          />
+      {!loading && (
+        <div className="flex-1 w-full h-full flex flex-row p-6">
+          <div className="h-full w-full">
+            <PaginatedNFTs
+              queryTable={"Listing"}
+              accountAddress={accountData?.address}
+              limitPerPage={8}
+              limitPerRow="grid-cols-4 grid gap-4 w-full"
+              showFilters={[]}
+              queryFilterList={queryFilterList}
+              pageType={PageTypes.Explore}
+            />
+          </div>
         </div>
-      </div>  
-    }
+      )}
     </>
   );
 };

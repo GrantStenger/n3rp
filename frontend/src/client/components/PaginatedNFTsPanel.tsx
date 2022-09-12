@@ -31,9 +31,9 @@ const PaginatedNFTs = ({
   accountAddress?: string;
   limitPerPage?: number;
   limitPerRow?: string;
-  includes?: (string)[];
-  showFilters?: (Filter)[];
-  queryFilterList?: (QueryFilter)[];
+  includes?: string[];
+  showFilters?: Filter[];
+  queryFilterList?: QueryFilter[];
   pageType: PageTypes;
 }) => {
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ const PaginatedNFTs = ({
   const [nfts, setNfts] = useState<NftWithMetadata[]>([]);
   const [selectedNft, setSelectedNft] = useState<NftWithMetadata | null>(null);
   const [currPage, setCurrPage] = useState(0);
-  
+
   const [dateRange, setDateRange] = useState<[null | Date, null | Date]>([null, null]);
   const [startDate, endDate] = dateRange;
   const [startCost, setStartCost] = useState<null | number>(null);
@@ -51,6 +51,7 @@ const PaginatedNFTs = ({
   const [costFilterToggle, setCostFilterToggle] = useState(false);
   const [dateFilterVisible, setDateFilterVisible] = useState(false);
   const [costFilterVisible, setCostFilterVisible] = useState(false);
+  const [noDataFound, setNoDataFound] = useState(false);
   const [queryObj, setQueryObj] = useState<Query>({
     table: queryTable,
     queryKey: queryKey,
@@ -68,107 +69,126 @@ const PaginatedNFTs = ({
       limitPerPage: limitPerPage,
       skipPage: 0,
       queryFilterList: queryFilterList,
-    })
-  }, [queryKey, queryValue, queryFilterList])
+    });
+  }, [queryKey, queryValue, queryFilterList]);
+
+  // useEffect(() => {
+  //   if(startCost !== null && !Number.isNaN(startCost)) {
+  //     for(let i=0; i < queryFilterList.length;i++) {
+  //       if(queryFilterList[i].filterType === QueryFilterTypes.GREATER_THAN_OR_EQUAL_TO && queryFilterList[i].filterKey === "listing.pricePerDay") {
+
+  //       }
+  //     }
+  //     console.log("StartCost", startCost);
+  //   } else if(endCost !== null && !Number.isNaN(endCost)) {
+  //     console.log("EndCost", endCost);
+  //   }
+  // }, [startCost, endCost])
 
   useEffect(() => {
-    if(showFilters.length > 0) {
+    if (showFilters.length > 0) {
       setFilters(true);
-      showFilters.filter(filter => filter.active).map(filter => {
-        if(filter.filterKey === FilterTypes.DATE_FILTER) {
-          setDateFilterVisible(true);
-          if(filter.default) {
-            setDateFilterToggle(true);
+      showFilters
+        .filter(filter => filter.active)
+        .map(filter => {
+          if (filter.filterKey === FilterTypes.DATE_FILTER) {
+            setDateFilterVisible(true);
+            if (filter.default) {
+              setDateFilterToggle(true);
+            }
+          } else if (filter.filterKey === FilterTypes.COST_FILTER) {
+            setCostFilterVisible(true);
+            if (filter.default) {
+              setCostFilterToggle(true);
+            }
           }
-        } else if(filter.filterKey === FilterTypes.COST_FILTER) {
-          setCostFilterVisible(true);
-          if(filter.default) {
-            setCostFilterToggle(true);
-          }
-        }
-      })
-    } 
-  },[])
+        });
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      setSelectedNft(null); 
+      setSelectedNft(null);
       setLoading(true);
       try {
         const query = new Moralis.Query(queryObj.table);
-        if (typeof(queryObj.queryKey) !== "undefined" && typeof(queryObj.queryValue) !== "undefined") {
+        if (typeof queryObj.queryKey !== "undefined" && typeof queryObj.queryValue !== "undefined") {
           query.equalTo(queryObj.queryKey, queryObj.queryValue);
         }
-        if (typeof(queryObj.limitPerPage) !== "undefined") {
+        if (typeof queryObj.limitPerPage !== "undefined") {
           query.limit(queryObj.limitPerPage);
         }
-        if (typeof(queryObj.limitPerPage) !== "undefined" && typeof(queryObj.skipPage) !== "undefined") {
+        if (typeof queryObj.limitPerPage !== "undefined" && typeof queryObj.skipPage !== "undefined") {
           query.skip(queryObj.limitPerPage * queryObj.skipPage);
         }
 
-        for(let i=0; i<includes.length; i++) {
+        for (let i = 0; i < includes.length; i++) {
           query.include(includes[i]);
         }
 
-        if(typeof(queryFilterList) !== "undefined" && queryFilterList?.length > 0) {
-          for(let i=0; i < queryFilterList.length;i++) {
-            let filterObj:QueryFilter = queryFilterList[i];
-            if(typeof(filterObj.filterValue) !== "undefined") {
-              if(typeof(filterObj.filterValue) === 'string' || typeof(filterObj.filterValue) === 'number' || typeof(filterObj.filterValue) === 'boolean') {
-                if(QueryFilterTypes.EQUAL_TO === filterObj.filterType) {
+        if (typeof queryFilterList !== "undefined" && queryFilterList?.length > 0) {
+          for (let i = 0; i < queryFilterList.length; i++) {
+            let filterObj: QueryFilter = queryFilterList[i];
+            if (typeof filterObj.filterValue !== "undefined") {
+              if (
+                typeof filterObj.filterValue === "string" ||
+                typeof filterObj.filterValue === "number" ||
+                typeof filterObj.filterValue === "boolean"
+              ) {
+                if (QueryFilterTypes.EQUAL_TO === filterObj.filterType) {
                   query.equalTo(filterObj.filterKey, filterObj.filterValue);
-                } else if(QueryFilterTypes.NOT_EQUAL_TO === filterObj.filterType) {
+                } else if (QueryFilterTypes.NOT_EQUAL_TO === filterObj.filterType) {
                   query.notEqualTo(filterObj.filterKey, filterObj.filterValue);
-                } else if(QueryFilterTypes.LESS_THAN === filterObj.filterType) {
+                } else if (QueryFilterTypes.LESS_THAN === filterObj.filterType) {
                   query.lessThan(filterObj.filterKey, filterObj.filterValue);
-                } else if(QueryFilterTypes.LESS_THAN_OR_EQUAL_TO === filterObj.filterType) {
+                } else if (QueryFilterTypes.LESS_THAN_OR_EQUAL_TO === filterObj.filterType) {
                   query.lessThan(filterObj.filterKey, filterObj.filterValue);
-                } else if(QueryFilterTypes.GREATER_THAN === filterObj.filterType) {
+                } else if (QueryFilterTypes.GREATER_THAN === filterObj.filterType) {
                   query.greaterThan(filterObj.filterKey, filterObj.filterValue);
-                } else if(QueryFilterTypes.GREATER_THAN_OR_EQUAL_TO === filterObj.filterType) {
+                } else if (QueryFilterTypes.GREATER_THAN_OR_EQUAL_TO === filterObj.filterType) {
                   query.greaterThanOrEqualTo(filterObj.filterKey, filterObj.filterValue);
                 } else {
                 }
               } else {
-                if(QueryFilterTypes.CONTAINED_IN === filterObj.filterType) {
+                if (QueryFilterTypes.CONTAINED_IN === filterObj.filterType) {
                   query.containedIn(filterObj.filterKey, filterObj.filterValue);
-                } else if(QueryFilterTypes.NOT_CONTAINED_IN === filterObj.filterType) {
+                } else if (QueryFilterTypes.NOT_CONTAINED_IN === filterObj.filterType) {
                   query.notContainedIn(filterObj.filterKey, filterObj.filterValue);
                 }
               }
             } else {
-
             }
           }
         }
 
         query.find().then(nftListingsData => {
-          const nftListings: Nft[] = nftListingsData.map(nft => {
-            if(queryObj.table  === "Rental") {
-              nft = nft.get("listing");
-            }
-            return {
-              listing: nft.attributes.listing,
-              specification: nft.attributes.nftSpecification,
-              objectId: nft.id,
-              rental: {
-                startDate: nft.get("startDate"),
-                dueDate: nft.get("dueDate"),
-                borrowerAddress: nft.get("borrowerAddress"),
-                rentalPayment: nft.get("rentalPayment"),
+          if (nftListingsData.length > 0) {
+            const nftListings: Nft[] = nftListingsData.map(nft => {
+              if(pageType === PageTypes.Rental) {
+                nft = nft.get("listing");
               }
-            };
-          });
-          mergeNftsWithMetadata(nftListings).then(nftsWithMetadata => {
-            setNfts(nftsWithMetadata);
+              return {
+                listing: nft.attributes.listing,
+                specification: nft.attributes.nftSpecification,
+                objectId: nft.id,
+                rental: nft.attributes.rental,
+                rentalObj: nft.get("rentalObj"),
+              };
+            });
+            mergeNftsWithMetadata(nftListings).then(nftsWithMetadata => {
+              setNfts(nftsWithMetadata);
+              setLoading(false);
+            });
+          } else {
             setLoading(false);
-          });
+            setNoDataFound(true);
+          }
         });
       } catch (error) {
         console.log(error);
       }
     };
-    if(isInitialized) {
+    if (isInitialized) {
       fetchData();
     }
   }, [queryObj, isInitialized]);
@@ -197,19 +217,6 @@ const PaginatedNFTs = ({
       }
     }
 
-    const holidays = [
-      new Date(2022, 10, 14),
-      new Date(2022, 11, 11),
-      new Date(2022, 10, 28),
-      new Date(2022, 12, 25),
-      new Date(2022, 1, 1),
-      new Date(2022, 1, 20),
-      new Date(2022, 2, 17),
-      new Date(2022, 5, 25),
-      new Date(2022, 7, 3),
-      new Date(2022, 9, 7)
-    ];
-
     return (
       <div className="rounded-b-lg h-full border border-gray-100 bg-gray-50">
         <div className="flex flex-col items-center py-4">
@@ -223,7 +230,6 @@ const PaginatedNFTs = ({
             minDate={new Date()}
             showDisabledMonthNavigation
             inline
-            excludeDates={holidays}
           />
           {startDate && endDate && (
             <div className="flex flex-row">
@@ -282,11 +288,10 @@ const PaginatedNFTs = ({
 
   return (
     <div className="flex-1 w-full h-full flex flex-row p-6">
-      {
-        filters && (
+      {filters && (
         <div className="w-3/12 h-3/6 px-4 py-2">
           <p className="font-bold text-lg border-b border-gray-200 mb-6">Filters</p>
-          {dateFilterVisible && 
+          {dateFilterVisible && (
             <div className="my-2">
               <div
                 onClick={() => setDateFilterToggle(!dateFilterToggle)}
@@ -300,8 +305,8 @@ const PaginatedNFTs = ({
               </div>
               {dateFilterToggle && <div className="w-full h-content">{renderDateFilter()}</div>}
             </div>
-          }
-          {costFilterVisible && 
+          )}
+          {costFilterVisible && (
             <div className="my-2">
               <div
                 onClick={() => setCostFilterToggle(!costFilterToggle)}
@@ -315,10 +320,9 @@ const PaginatedNFTs = ({
               </div>
               {costFilterToggle && <div className="w-full h-20">{renderCostFilter()}</div>}
             </div>
-          }
+          )}
         </div>
-        )
-      }
+      )}
       <div className="flex-1">
         {loading ? (
           <div className="w-full flex justify-center items-center h-96 mb-36">
@@ -332,17 +336,21 @@ const PaginatedNFTs = ({
               colors={["#e15b64", "#e15b64", "#e15b64", "#e15b64", "#e15b64"]}
             />
           </div>
+        ) : noDataFound ? (
+          <div className="flex w-full h-full justify-center items-center">
+            <h2 className="font-bold">No Data Found!</h2>
+          </div>
         ) : (
           <div>
             {selectedNft && (
               <Popup closeHandler={() => setSelectedNft(null)}>
-                <RentDetails nft={selectedNft} accountAddress={accountAddress} pageType={pageType}/>
+                <RentDetails nft={selectedNft} accountAddress={accountAddress} pageType={pageType} />
               </Popup>
             )}
             <div className={`${limitPerRow}`}>
               {nfts.map((nft, index) => (
                 <div onClick={() => setSelectedNft(nft)} key={index}>
-                  <ListingPanel nft={nft} pageType={pageType}/>
+                  <ListingPanel nft={nft} pageType={pageType} />
                 </div>
               ))}
             </div>
@@ -359,6 +367,7 @@ const PaginatedNFTs = ({
           <button
             onClick={() => setCurrPage(goNext(queryObj))}
             className="rounded-lg px-4 py-2 bg-indigo-700 text-white font-semibold"
+            disabled={noDataFound}
           >
             Next
           </button>

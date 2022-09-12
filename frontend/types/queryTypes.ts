@@ -4,7 +4,7 @@ export interface Query {
   queryValue?: string | number;
   limitPerPage?: number;
   skipPage?: number;
-  queryFilterList?: (QueryFilter)[];
+  queryFilterList?: QueryFilter[];
 }
 
 export interface Filter {
@@ -13,16 +13,15 @@ export interface Filter {
   active: boolean;
 }
 
-
 export enum FilterTypes {
   DATE_FILTER,
-  COST_FILTER
+  COST_FILTER,
 }
 
 export interface QueryFilter {
   filterType: QueryFilterTypes;
   filterKey: string;
-  filterValue?: string|number|boolean|[];
+  filterValue?: string | number | boolean | [];
 }
 
 export enum QueryFilterTypes {
@@ -34,5 +33,5 @@ export enum QueryFilterTypes {
   GREATER_THAN_OR_EQUAL_TO = "greaterThanOrEqualTo",
   CONTAINED_IN = "containedIn",
   NOT_CONTAINED_IN = "notContainedIn",
-  DISTINCT="distinct"
+  DISTINCT = "distinct",
 }

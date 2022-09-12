@@ -1,4 +1,4 @@
-import React,{ useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Navbar } from "../components/Navbar/Navbar";
 import { Footer } from "../components/Footer";
 import { useAccount, useConnect } from "wagmi";
@@ -12,10 +12,10 @@ const Rentals = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if(typeof(accountData?.address) !== "undefined") {
+    if (typeof accountData?.address !== "undefined") {
       setLoading(false);
     }
-  },[isConnected])
+  }, [isConnected]);
 
   return (
     <div className="flex bg-white-100 flex-col justify-between min-h-screen">
@@ -31,12 +31,12 @@ const Rentals = () => {
 };
 
 const MyListingsView = ({ accountAddress }: { accountAddress: string }) => {
-  const queryFilterList:(QueryFilter)[] = [
+  const queryFilterList: QueryFilter[] = [
     {
       filterType: QueryFilterTypes.EQUAL_TO,
       filterKey: "active",
       filterValue: true,
-    }
+    },
   ];
 
   return (
@@ -60,6 +60,14 @@ const MyListingsView = ({ accountAddress }: { accountAddress: string }) => {
 
 const MyRentalsView = ({ accountAddress }: { accountAddress: string }) => {
 
+  const queryFilterList = [
+    {
+      filterType: QueryFilterTypes.EQUAL_TO,
+      filterKey: "active",
+      filterValue: true,
+    }
+  ];
+
   return (
     <div className="m-20 space-y-6">
       <h1 className="text-4xl font-bold border-b-2 py-2">My Rentals</h1>
@@ -72,7 +80,7 @@ const MyRentalsView = ({ accountAddress }: { accountAddress: string }) => {
           limitPerPage={8}
           limitPerRow="grid-cols-4 grid gap-4 w-full"
           includes={["listing"]}
-          queryFilterList={[]}
+          queryFilterList={queryFilterList}
           pageType={PageTypes.Rental}
         />
       </div>

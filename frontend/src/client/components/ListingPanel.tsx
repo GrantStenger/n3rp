@@ -9,12 +9,12 @@ export const ListingPanel = ({
   nft,
   pureNft = false,
   desc = true,
-  pageType
+  pageType,
 }: {
   nft: NftWithMetadata | null;
   pureNft?: boolean;
   desc?: boolean;
-  pageType: PageTypes
+  pageType: PageTypes;
 }) => {
   const [viewPropertyTab, setViewPropertyTab] = useState(false);
 
@@ -54,29 +54,37 @@ export const ListingPanel = ({
           </div>
           {desc && (
             <div className="border border-gray-200 rounded-lg shadow-md mt-2">
-              <div className="font-bold text-slate-800 text-xl py-3 px-6 border-b border-gray-200">Description</div>
-              <div className="bg-gray-50 w-full rounded-b-lg flex items-center px-6 py-4">
-                <h1 className="text-lg font-semibold">{nft.name}</h1>
-                <div className="flex-grow pl-1"></div>
-                {!pureNft && <p>ETH({nft.nft.listing.pricePerDay}) / day</p>}
+              <div className="font-bold text-slate-800 text-lg py-3 px-4 border-b border-gray-200">Details</div>
+              <div className="bg-gray-50 w-full rounded-b-lg flex items-center px-4 py-4 overflow-scroll space-x-2">
+                <p className="text-md">
+                  {typeof nft.name != "undefined" && nft.name.length > 0 ? nft.name : "No Details Available"}
+                </p>
+                {/* <div className="flex-grow pl-1"></div> */}
+                {/* {!pureNft && <p className=" text-md">ETH({nft.nft.listing.pricePerDay}) / day</p>} */}
               </div>
             </div>
           )}
-          <div className="shadow-lg rounded-lg flex flex-row space-x-2 py-4 bg-gray-50 px-4 justify-start border border-gray-200 my-2">
-            <h3 className="flex-1 text-md font-semibold">Price per day: {nft.nft.listing.pricePerDay} ETH</h3>
-            <h3 className="text-md font-semibold">Collateral: {nft.nft.listing.collateral} ETH</h3>
-          </div>
+          {pageType !== PageTypes.List && (
+            <div className="shadow-lg rounded-lg flex flex-row space-x-2 py-4 bg-gray-50 px-4 border border-gray-200 my-2 overflow-scroll">
+              <h3 className="flex-1 flex flex-col text-md font-normal">
+                <p className="text-md font-semibold">Price:</p> {nft.nft.listing.pricePerDay} (ETH/Day)
+              </h3>
+              <h3 className="text-md flex flex-col font-normal">
+                <p className="text-md font-semibold">Collateral:</p> {nft.nft.listing.collateral} ETH
+              </h3>
+            </div>
+          )}
           {pureNft && (
             <div className="border border-gray-200 rounded-lg shadow-md mt-2">
               <div
                 onClick={() => setViewPropertyTab(!viewPropertyTab)}
-                className="cursor-pointer flex flex-row items-center font-bold text-slate-800 text-xl py-3 px-6 border-b border-gray-200"
+                className="cursor-pointer flex flex-row items-center font-bold text-slate-800 text-lg py-3 px-4 border-b border-gray-200"
               >
                 <span className="flex-1">Properties</span>
                 <img src={viewPropertyTab ? upArrow : downArrow} className="w-3 h-3" />
               </div>
               {viewPropertyTab && (
-                <div className="bg-gray-50 w-full px-6 py-4">
+                <div className="bg-gray-50 w-full px-4 py-4">
                   {nft.attributes.map(attribute => (
                     <div
                       className="inline-block bg-slate-200 px-2 py-1 rounded-xl text-xs mr-2 mb-2"

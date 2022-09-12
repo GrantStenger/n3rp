@@ -10,7 +10,7 @@ import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
 const infuraId = process.env.INFURA_ID;
 
 // Chains for connectors to support
-const chains = [chain.mainnet];
+const chains = [chain.goerli];
 
 const connectors = ({ chainId }: { chainId?: number }) => {
   const rpcUrl = chains.find(x => x.id === chainId)?.rpcUrls?.[0] ?? chain.mainnet.rpcUrls[0];

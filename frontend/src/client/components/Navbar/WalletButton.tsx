@@ -81,7 +81,7 @@ const WalletButton = () => {
         <>
           {switchNetwork && activeChain?.unsupported ? (
             <button
-              onClick={() => switchNetwork(1)}
+              onClick={() => switchNetwork(5)}
               className="rounded-full hover:bg-red-500 bg-red-600 text-white px-4 py-3 mx-5 text-sm font-bold"
             >
               Switch Network

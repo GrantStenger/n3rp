@@ -1,5 +1,6 @@
 export enum PageTypes {
-    Explore,
-    MyListing,
-    Rental,
+  Explore,
+  MyListing,
+  Rental,
+  List,
 }

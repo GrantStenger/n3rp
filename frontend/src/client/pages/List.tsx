@@ -9,6 +9,7 @@ import { NftWithMetadata, Nft } from "../../../types/nftTypes.js";
 import { useAccount, useConnect } from "wagmi";
 
 import "react-day-picker/dist/style.css";
+import { PageTypes } from "../../../types/types";
 
 const buttonBaseStyle = " text-white font-semibold py-2 px-4 mt-4 rounded-md";
 const inputStyle = "border flex-grow border-slate-500 p-1 rounded-md";
@@ -24,6 +25,7 @@ const List = () => {
   const [nft, setNft] = useState<NftWithMetadata | null>(null);
   const [validNft, setValidNft] = useState(false);
   const { isConnected } = useConnect();
+  const [listingRental, setListingRental] = useState(false);
   const { data: accountData } = useAccount();
 
   // A complex subclass of Moralis.Object
@@ -37,6 +39,7 @@ const List = () => {
         listing.set("nftSpecification", nft.specification);
         listing.set("active", true);
         listing.set("rental", false);
+        listing.set("rentalObj", undefined);
         return listing;
       },
     },
@@ -47,19 +50,23 @@ const List = () => {
     query.equalTo("nftSpecification.collection", nft.specification.collection);
     query.equalTo("nftSpecification.id", nft.specification.id);
     query.first().then(
-      (listing) => {
-        if(typeof(listing) !== "undefined") {
-          if(!listing.get("active")) {
+      listing => {
+        if (typeof listing !== "undefined") {
+          if (!listing.get("active")) {
+            console.log("Listing is: ", nft.listing);
             listing.set("listing", nft.listing);
             listing.set("active", true);
             listing.save().then(
               (listing: any) => {
                 console.log("Save Successfull!!");
+                alert("NFT is Listed!!");
               },
               (e: any) => {
                 console.log(e);
               },
             );
+          } else {
+            alert("NFT is already Listed!!");
           }
         } else {
           const newListing = Listing.create(nft);
@@ -71,13 +78,17 @@ const List = () => {
               console.log(e);
             },
           );
+          alert("NFT is Listed!!");
         }
+        setListingRental(false);
       },
-      (error) => {
+      error => {
         console.log("Error Occurred");
-      }
-    )
-  }
+        setListingRental(false);
+        alert("NFT Listing Failed. Try Again!!");
+      },
+    );
+  };
 
   const submitListing = (nft: Nft) => {
     checkUniqueNft(nft);
@@ -93,6 +104,7 @@ const List = () => {
     },
     onSubmit: values => {
       if (isConnected && accountData?.address) {
+        setListingRental(true);
         submitListing({
           listing: {
             owner: accountData?.address,
@@ -146,7 +158,7 @@ const List = () => {
       <Navbar />
       <div className="flex-1 flex flex-row w-10/12 mt-10">
         <div className="w-5/12">
-          <ListingPanel nft={nft} pureNft={true} />
+          <ListingPanel nft={nft} pureNft={true} pageType={PageTypes.List} />
         </div>
         <div className="flex-1 mx-4">
           <div className="shadow-md rounded-lg border border-gray-200 w-content">
@@ -245,24 +257,25 @@ const List = () => {
                 <label className={labelStyle}>Collateral Payback</label>
                 <input type="text" className={inputStyle}></input>
               </FormSection> */}
-              {
-                isConnected ? ( 
+              {isConnected ? (
                 <button
-                  className={`${(validNft ? "bg-indigo-800" : "cursor-not-allowed bg-gray-500") + buttonBaseStyle}`}
-                  disabled={!validNft}
+                  className={`${
+                    (validNft && !listingRental ? "bg-indigo-800" : "cursor-not-allowed bg-gray-500") + buttonBaseStyle
+                  }`}
+                  disabled={!validNft || listingRental}
                   type="submit"
                 >
-                  List my Rental!
-                </button>) : (
-                  <button
+                  {!listingRental ? "List my Rental!" : "Listing..."}
+                </button>
+              ) : (
+                <button
                   className={`${(validNft ? "bg-indigo-800" : "cursor-not-allowed bg-gray-500") + buttonBaseStyle}`}
                   disabled={!validNft}
                   type="submit"
                 >
                   Connect To Wallet
                 </button>
-                )
-              }
+              )}
             </form>
           </div>
         </div>
